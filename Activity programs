@@ -1,0 +1,100 @@
+Register/ log in
+
+@startuml
+title AD-01 Register / Login
+start
+:Open site;
+if (Has account?) then (No)
+  :Enter registration details;
+  :Validate inputs;
+  if (Valid?) then (Yes)
+    :Create user record;
+    :Start session;
+    :Redirect to home;
+  else (No)
+    :Show validation errors;
+  endif
+else (Yes)
+  :Enter email + password;
+  :Validate inputs;
+  :Check credentials;
+  if (Correct?) then (Yes)
+    :Start session;
+    :Redirect to home;
+  else (No)
+    :Show login error;
+  endif
+endif
+stop
+@enduml
+
+View users list
+
+@startuml
+title AD-02 View Users List
+start
+:Open "Users" page;
+:Request users from DB;
+if (Users found?) then (Yes)
+  :Render users list;
+  :User selects a user;
+  :Navigate to profile page;
+else (No)
+  :Show empty-state message;
+endif
+stop
+@enduml
+
+
+
+View User Profile
+
+@startuml
+title AD-03 View User Profile
+start
+:Open user profile page;
+:Fetch user details from DB;
+:Fetch user's listings (optional);
+if (User exists?) then (Yes)
+  :Render profile + listings;
+else (No)
+  :Show "User not found";
+endif
+stop
+@enduml
+
+
+Browse Listings + Filter by Tags/Categories (Listing page + tags/categories)
+
+@startuml
+title AD-04 Browse Listings + Filter
+start
+:Open listings page;
+:Fetch listings + tags/categories;
+:Display list;
+if (Apply search/filter?) then (Yes)
+  :Enter keyword / pick tag/category;
+  :Build query;
+  :Fetch filtered listings;
+  :Display filtered list;
+endif
+:Select listing;
+:Open detail page;
+stop
+@enduml
+
+
+View Listing Detail
+@startuml
+title AD-05 View Listing Detail
+start
+:Open listing detail page;
+:Fetch listing from DB;
+:Fetch owner + tags/categories;
+if (Listing exists AND active?) then (Yes)
+  :Render listing details;
+else (No)
+  :Show "Listing unavailable/not found";
+endif
+stop
+@enduml
