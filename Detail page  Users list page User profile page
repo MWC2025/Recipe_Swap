@@ -208,3 +208,45 @@ app.get("/tags/:name", (req, res) => {
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });
+backend/views/users.pug
+h1 Users
+ul
+  each user in users
+    li
+      a(href=`/users/${user.user_id}`)= user.username
+backend/views/profile.pug
+h1= user.username
+p Email: #{user.email}
+
+h2 Recipes
+ul
+  each recipe in recipes
+    li
+      a(href=`/recipes/${recipe.recipe_id}`)= recipe.title
+ backend/views/recipe.pug
+h1= recipe.title
+
+p
+  b Description:
+  |  #{recipe.description}
+
+p
+  b Ingredients:
+  |  #{recipe.ingredients}
+
+p
+  b Instructions:
+  |  #{recipe.instructions}
+
+p
+  b Tags:
+  |  #{tags.map(t => t.name).join(', ')}
+
+a(href=`/users/${recipe.user_id}`) View Author
+ backend/views/tag.pug (BONUS)
+h1 Recipes tagged: #{tagName}
+
+ul
+  each recipe in recipes
+    li
+      a(href=`/recipes/${recipe.recipe_id}`)= recipe.title
