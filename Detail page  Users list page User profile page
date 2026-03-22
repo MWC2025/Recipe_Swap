@@ -1,1 +1,210 @@
+ docker-compose.yml
+version: "3.8"
 
+services:
+  db:
+    image: mysql:8
+    container_name: recipe_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: recipes
+    ports:
+      - "3306:3306"
+
+  backend:
+    build: ./backend
+    container_name: recipe_backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: password
+      DB_NAME: recipes
+ backend/Dockerfile
+FROM node:18
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+ backend/package.json
+{
+  "name": "recipe-swap",
+  "version": "1.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.6.0",
+    "pug": "^3.0.2"
+  }
+} backend/db.js
+const mysql = require("mysql2");
+
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
+
+db.connect(err => {
+  if (err) {
+    console.error("DB connection error:", err);
+  } else {
+    console.log("MySQL Connected");
+  }
+});
+
+module.exports = db; 5. backend/server.js
+const express = require("express");
+const db = require("./db");
+
+const app = express();
+app.set("view engine", "pug");
+
+/* =========================
+   INIT DATABASE
+========================= */
+app.get("/init", (req, res) => {
+  const queries = [
+    `CREATE TABLE IF NOT EXISTS users (
+      user_id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(100),
+      email VARCHAR(100)
+    )`,
+    `CREATE TABLE IF NOT EXISTS recipes (
+      recipe_id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT,
+      title VARCHAR(255),
+      description TEXT,
+      ingredients TEXT,
+      instructions TEXT
+    )`,
+    `CREATE TABLE IF NOT EXISTS tags (
+      tag_id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(100)
+    )`,
+    `CREATE TABLE IF NOT EXISTS recipe_tags (
+      recipe_id INT,
+      tag_id INT
+    )`
+  ];
+
+  queries.forEach(q => db.query(q));
+  res.send("Database initialized");
+});
+
+/* =========================
+   SEED DATA (PERSONAS)
+========================= */
+app.get("/seed", (req, res) => {
+  db.query("DELETE FROM recipe_tags");
+  db.query("DELETE FROM recipes");
+  db.query("DELETE FROM users");
+  db.query("DELETE FROM tags");
+
+  db.query(`
+    INSERT INTO users (username, email) VALUES
+    ('Sarah', 'sarah@student.com'),
+    ('Jamal', 'jamal@fitness.com'),
+    ('Priya', 'priya@work.com'),
+    ('Daniel', 'daniel@uni.com')
+  `);
+
+  db.query(`
+    INSERT INTO recipes (user_id, title, description, ingredients, instructions) VALUES
+    (1, 'Quick Pancakes', 'Easy breakfast', 'Flour, Eggs', 'Mix & cook'),
+    (2, 'Protein Bowl', 'Gym meal', 'Chicken, Rice', 'Cook & serve'),
+    (3, 'Family Pasta', 'Quick dinner', 'Pasta, Sauce', 'Boil & mix'),
+    (4, 'Student Noodles', 'Cheap meal', 'Noodles', 'Cook fast')
+  `);
+
+  db.query(`
+    INSERT INTO tags (name) VALUES
+    ('Quick'), ('Healthy'), ('Vegetarian'), ('Student')
+  `);
+
+  db.query(`
+    INSERT INTO recipe_tags (recipe_id, tag_id) VALUES
+    (1,1), (2,2), (3,1), (4,4)
+  `);
+
+  res.send("Seeded!");
+});
+
+/* =========================
+   USERS LIST PAGE
+========================= */
+app.get("/users", (req, res) => {
+  db.query("SELECT * FROM users", (err, users) => {
+    res.render("users", { users });
+  });
+});
+
+/* =========================
+   USER PROFILE PAGE
+========================= */
+app.get("/users/:id", (req, res) => {
+  const userId = req.params.id;
+
+  db.query("SELECT * FROM users WHERE user_id = ?", [userId], (err, user) => {
+    if (!user.length) return res.send("User not found");
+
+    db.query("SELECT * FROM recipes WHERE user_id = ?", [userId], (err, recipes) => {
+      res.render("profile", { user: user[0], recipes });
+    });
+  });
+});
+
+/* =========================
+   DETAIL PAGE (RECIPE)
+========================= */
+app.get("/recipes/:id", (req, res) => {
+  const id = req.params.id;
+
+  db.query("SELECT * FROM recipes WHERE recipe_id = ?", [id], (err, result) => {
+    if (!result.length) return res.send("Recipe not found");
+
+    const recipe = result[0];
+
+    db.query(`
+      SELECT t.name FROM tags t
+      JOIN recipe_tags rt ON t.tag_id = rt.tag_id
+      WHERE rt.recipe_id = ?
+    `, [id], (err, tags) => {
+      res.render("recipe", { recipe, tags });
+    });
+  });
+});
+
+/* =========================
+   TAG FILTER PAGE (BONUS)
+========================= */
+app.get("/tags/:name", (req, res) => {
+  const tagName = req.params.name;
+
+  db.query(`
+    SELECT r.* FROM recipes r
+    JOIN recipe_tags rt ON r.recipe_id = rt.recipe_id
+    JOIN tags t ON t.tag_id = rt.tag_id
+    WHERE t.name = ?
+  `, [tagName], (err, recipes) => {
+    res.render("tag", { tagName, recipes });
+  });
+});
+
+/* ========================= */
+
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
+});
