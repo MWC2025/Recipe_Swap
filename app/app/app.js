@@ -19,7 +19,7 @@ app.get("/", function(req, res) {
     // Set up an array of data
     var test_data = ['one', 'two', 'three', 'four'];
     // Send the array through to the template as a variable called data
-    res.render("index", {'title':'My index page', 'heading':'My heading', 'data':test_data});
+    res.render("index", {'title':'234234 index page', 'heading':'My heading', 'data':test_data});
 });
 
 //JSON output of all students
