@@ -71,7 +71,7 @@ const db = require("./db");
 
 const app = express();
 app.set("view engine", "pug");
-
+app.use(express.static("public"));
 /* =========================
    INIT DATABASE
 ========================= */
@@ -167,7 +167,7 @@ app.get("/users/:id", (req, res) => {
 });
 
 /* =========================
-   DETAIL PAGE (RECIPE)
+   DETAIL PAGE 
 ========================= */
 app.get("/recipes/:id", (req, res) => {
   const id = req.params.id;
@@ -188,7 +188,7 @@ app.get("/recipes/:id", (req, res) => {
 });
 
 /* =========================
-   TAG FILTER PAGE (BONUS)
+   TAG FILTER PAGE 
 ========================= */
 app.get("/tags/:name", (req, res) => {
   const tagName = req.params.name;
@@ -208,45 +208,163 @@ app.get("/tags/:name", (req, res) => {
 app.listen(3000, () => {
   console.log("Server running on port 3000");
 });
-backend/views/users.pug
-h1 Users
-ul
-  each user in users
-    li
-      a(href=`/users/${user.user_id}`)= user.username
-backend/views/profile.pug
-h1= user.username
-p Email: #{user.email}
+doctype html
+html
+  head
+    title Recipe Swap
+    link(rel="stylesheet", href="/css/style.css")
+  body
+    nav.navbar
+      h1.logo RecipeSwap
+      ul.nav-links
+        li: a(href="/users") Users
+    .container
+      block content
+extends layout
 
-h2 Recipes
-ul
-  each recipe in recipes
-    li
-      a(href=`/recipes/${recipe.recipe_id}`)= recipe.title
- backend/views/recipe.pug
-h1= recipe.title
+block content
+  h2.page-title Users
 
-p
-  b Description:
-  |  #{recipe.description}
+  .card-grid
+    each user in users
+      .card
+        h3= user.username
+        p= user.email
+        a.btn(href=`/users/${user.user_id}`) View Profile
+extends layout
 
-p
-  b Ingredients:
-  |  #{recipe.ingredients}
+block content
+  .profile
+    h2= user.username
+    p.email= user.email
 
-p
-  b Instructions:
-  |  #{recipe.instructions}
+  h3.section-title Recipes
 
-p
-  b Tags:
-  |  #{tags.map(t => t.name).join(', ')}
+  .card-grid
+    each recipe in recipes
+      .card
+        h4= recipe.title
+        p= recipe.description
+        a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
+extends layout
 
-a(href=`/users/${recipe.user_id}`) View Author
- backend/views/tag.pug (BONUS)
-h1 Recipes tagged: #{tagName}
+block content
+  .recipe-detail
+    h2= recipe.title
 
-ul
-  each recipe in recipes
-    li
-      a(href=`/recipes/${recipe.recipe_id}`)= recipe.title
+    .recipe-section
+      h4 Description
+      p= recipe.description
+
+    .recipe-section
+      h4 Ingredients
+      p= recipe.ingredients
+
+    .recipe-section
+      h4 Instructions
+      p= recipe.instructions
+
+    .recipe-section
+      h4 Tags
+      p= tags.map(t => t.name).join(', ')
+
+    a.btn(href=`/users/${recipe.user_id}`) View Author
+extends layout
+
+block content
+  h2.page-title Recipes tagged: #{tagName}
+
+  .card-grid
+    each recipe in recipes
+      .card
+        h4= recipe.title
+        p= recipe.description
+        a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
+backend/public/css/style.css
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f5f6fa;
+}
+
+/* NAVBAR */
+.navbar {
+  background: #2c3e50;
+  color: white;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.logo {
+  margin: 0;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+}
+
+/* CONTAINER */
+.container {
+  padding: 30px;
+}
+
+/* TITLES */
+.page-title {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin-top: 30px;
+}
+
+/* GRID */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* BUTTON */
+.btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #3498db;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+/* PROFILE */
+.profile {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* RECIPE */
+.recipe-detail {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+}
+
+.recipe-section {
+  margin-bottom: 20px;
+}
