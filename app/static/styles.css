@@ -1,12 +1,19 @@
-
 header {
   display: flex;
-  justify-content: flex-end;  
+  align-items: center;    
+  justify-content: space-between; 
+  
 }
 
-/* Style the links inside the pill navigation menu */
+.pill-nav {
+  display: flex;           
+  gap: 10px;   
+  margin-left: auto;          
+}
+
 .pill-nav a {
   display: inline-block;
+  
   color: black;
   text-align: center;
   padding: 14px;
@@ -15,13 +22,11 @@ header {
   border-radius: 5px;
 }
 
-/* Change the color of links on mouse-over */
 .pill-nav a:hover {
   background-color: #ddd;
   color: black;
 }
 
-/* Add a color to the active/current link */
 .pill-nav a.active {
   background-color: dodgerblue;
   color: white;

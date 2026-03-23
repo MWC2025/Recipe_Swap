@@ -1,5 +1,16 @@
-html 
-    head    
-        title #{title}
-    body 
-        block content
+doctype html
+html
+  head
+    title Recipe Swap
+    link(rel="stylesheet", href="styles.css")
+  body
+    nav.pill-nav 
+     h1.logo RecipeSwap
+     a.active(href="#users") Users
+     a(href="#news") News
+     a(href="#contact") Contact
+     a(href="#about") About
+
+    .container
+      block content
+    

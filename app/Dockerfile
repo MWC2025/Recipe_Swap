@@ -17,4 +17,3 @@ COPY . /src
 # Expose our application port (3000)
 EXPOSE 3000
 
-

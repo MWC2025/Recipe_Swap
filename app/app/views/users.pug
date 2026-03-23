@@ -1,0 +1,10 @@
+extends layout 
+block content
+  h2.page-title Users
+
+  .card-grid
+    each user in users
+      .card
+        h3= user.username
+        p= user.email
+        a.btn(href=`/users/${user.user_id}`) View Profile

@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  .profile
+    h2= user.username
+    p.email= user.email
+
+  h3.section-title Recipes
+
+  .card-grid
+    each recipe in recipes
+      .card
+        h4= recipe.title
+        p= recipe.description
+        a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
