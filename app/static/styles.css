@@ -31,3 +31,80 @@ header {
   background-color: dodgerblue;
   color: white;
 }
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f5f6fa;
+}
+
+
+
+.logo {
+  margin: 0;
+}
+
+
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+}
+
+/* CONTAINER */
+.container {
+  padding: 30px;
+}
+
+/* TITLES */
+.page-title {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin-top: 30px;
+}
+
+/* GRID */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* BUTTON */
+.btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #3498db;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+/* PROFILE */
+.profile {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* RECIPE */
+.recipe-detail {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+}
+
+.recipe-section {
+  margin-bottom: 20px;
+}
