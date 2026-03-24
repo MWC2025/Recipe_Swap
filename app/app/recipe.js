@@ -21,78 +21,145 @@ app.get("/", function(req, res) {
 });
 
 
-app.get("/init", (req, res) => {
+app.get("/init", function (req, res) {
   const queries = [
-    `CREATE TABLE IF NOT EXISTS users (
-      user_id INT AUTO_INCREMENT PRIMARY KEY,
-      username VARCHAR(100),
-      email VARCHAR(100)
-    )`,
-    `CREATE TABLE IF NOT EXISTS recipes (
-      recipe_id INT AUTO_INCREMENT PRIMARY KEY,
-      user_id INT,
-      title VARCHAR(255),
-      description TEXT,
-      ingredients TEXT,
-      instructions TEXT
-    )`,
-    `CREATE TABLE IF NOT EXISTS tags (
-      tag_id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(100)
-    )`,
-    `CREATE TABLE IF NOT EXISTS recipe_tags (
-      recipe_id INT,
-      tag_id INT
-    )`
+    "DROP TABLE IF EXISTS recipe_tags",
+    "DROP TABLE IF EXISTS swaps",
+    "DROP TABLE IF EXISTS recipes",
+    "DROP TABLE IF EXISTS tags",
+    "DROP TABLE IF EXISTS users",
+
+    "CREATE TABLE users ( \
+      user_id       INT AUTO_INCREMENT PRIMARY KEY, \
+      username      VARCHAR(50)  NOT NULL UNIQUE, \
+      email_address VARCHAR(255) NOT NULL UNIQUE, \
+      password_hash VARCHAR(255) NOT NULL, \
+      created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP \
+    )",
+
+    "CREATE TABLE recipes ( \
+      recipe_id     INT AUTO_INCREMENT PRIMARY KEY, \
+      author_id     INT          NOT NULL, \
+      recipe_title  VARCHAR(150) NOT NULL, \
+      summary       TEXT         NOT NULL, \
+      ingredients   TEXT         NOT NULL, \
+      instructions  TEXT         NOT NULL, \
+      created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+      CONSTRAINT fk_recipes_author \
+        FOREIGN KEY (author_id) REFERENCES users(user_id) \
+        ON DELETE CASCADE \
+    )",
+
+    "CREATE TABLE tags ( \
+      tag_id   INT AUTO_INCREMENT PRIMARY KEY, \
+      tag_name VARCHAR(50) NOT NULL UNIQUE \
+    )",
+
+    "CREATE TABLE recipe_tags ( \
+      recipe_id INT NOT NULL, \
+      tag_id    INT NOT NULL, \
+      PRIMARY KEY (recipe_id, tag_id), \
+      CONSTRAINT fk_app_links_recipe \
+        FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) \
+        ON DELETE CASCADE, \
+      CONSTRAINT fk_links_tag \
+        FOREIGN KEY (tag_id) REFERENCES tags(tag_id) \
+        ON DELETE CASCADE \
+    )",
+
+    "CREATE TABLE swaps ( \
+      swap_id             INT AUTO_INCREMENT PRIMARY KEY, \
+      requester_id        INT      NOT NULL, \
+      requested_recipe_id INT      NOT NULL, \
+      offered_recipe_id   INT      NOT NULL, \
+      swap_status         ENUM('pending','accepted','declined','cancelled') \
+                         NOT NULL DEFAULT 'pending', \
+      created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+      updated_at          DATETIME NULL, \
+      CONSTRAINT fk_swaps_requester \
+        FOREIGN KEY (requester_id)        REFERENCES users(user_id) \
+        ON DELETE CASCADE, \
+      CONSTRAINT fk_swaps_requested \
+        FOREIGN KEY (requested_recipe_id) REFERENCES recipes(recipe_id) \
+        ON DELETE CASCADE, \
+      CONSTRAINT fk_swaps_offered \
+        FOREIGN KEY (offered_recipe_id)   REFERENCES recipes(recipe_id) \
+        ON DELETE CASCADE \
+    )"
   ];
 
-  // run queries in sequence
-  Promise.all(queries.map(q => db.query(q)))
-    .then(() => res.send("Database initialized"))
-    .catch(err => {
+  Promise.all(queries.map(function (q) { return db.query(q); }))
+    .then(function () {
+      res.send("Database initialised");
+    })
+    .catch(function (err) {
       console.error(err);
       res.status(500).send("Error initialising DB");
     });
 });
 
-app.get("/seed", (req, res) => {
+app.get("/seed", function (req, res) {
   const steps = [
     "DELETE FROM recipe_tags",
+    "DELETE FROM swaps",
     "DELETE FROM recipes",
-    "DELETE FROM users",
     "DELETE FROM tags",
-    `INSERT INTO users (username, email) VALUES
-      ('Sarah', 'sarah@student.com'),
-      ('Jamal', 'jamal@fitness.com'),
-      ('Priya', 'priya@work.com'),
-      ('Daniel', 'daniel@uni.com')`,
-    `INSERT INTO recipes (user_id, title, description, ingredients, instructions) VALUES
-      (1, 'Quick Pancakes', 'Easy breakfast', 'Flour, Eggs', 'Mix & cook'),
-      (2, 'Protein Bowl', 'Gym meal', 'Chicken, Rice', 'Cook & serve'),
-      (3, 'Family Pasta', 'Quick dinner', 'Pasta, Sauce', 'Boil & mix'),
-      (4, 'Student Noodles', 'Cheap meal', 'Noodles', 'Cook fast')`,
-    `INSERT INTO tags (name) VALUES
-      ('Quick'), ('Healthy'), ('Vegetarian'), ('Student')`,
-    `INSERT INTO recipe_tags (recipe_id, tag_id) VALUES
-      (1,1), (2,2), (3,1), (4,4)`
+    "DELETE FROM users",
+
+    "INSERT INTO users (username, email_address, password_hash) VALUES \
+    ('student_sarah',  'sarah@example.com',  'hash1'), \
+    ('coach_jamal',    'jamal@example.com',  'hash2'), \
+    ('parent_priya',   'priya@example.com',  'hash3')",
+
+    "INSERT INTO recipes (author_id, recipe_title, summary, ingredients, instructions) VALUES \
+    (1, 'Dorm Room Pasta', \
+     'Simple pasta dish for beginners', \
+     'pasta, tomato sauce, garlic, olive oil, salt, pepper', \
+     'Boil pasta; cook sauce with garlic; combine and season.'), \
+    (2, 'Lift Day Power Bowl', \
+     'High-protein bowl for training days', \
+     'chicken breast, rice, broccoli, olive oil, spices', \
+     'Grill chicken; steam broccoli; cook rice; assemble in a bowl.')",
+
+    "INSERT INTO tags (tag_name) VALUES \
+    ('vegetarian'), \
+    ('quick'), \
+    ('high-protein')",
+
+    "INSERT INTO recipe_tags (recipe_id, tag_id) VALUES \
+    (1, 1), \
+    (1, 2), \
+    (2, 3)",
+
+    "INSERT INTO swaps (requester_id, requested_recipe_id, offered_recipe_id, swap_status) VALUES \
+    (1, 2, 1, 'pending')"
   ];
 
-  steps.reduce(
-    (p, sql) => p.then(() => db.query(sql)),
-    Promise.resolve()
-  )
-    .then(() => res.send("Seeded!"))
-    .catch(err => {
+  steps.reduce(function (p, sql) {
+    return p.then(function () { return db.query(sql); });
+  }, Promise.resolve())
+    .then(function () {
+      res.send("Seeded");
+    })
+    .catch(function (err) {
       console.error(err);
       res.status(500).send("Error seeding data");
     });
 });
 //user profile page
 app.get("/users", (req, res) => {
-  db.query("SELECT * FROM app_users").then(users => {
+  db.query("SELECT * FROM users").then(users => {
     res.render("users", { users });
   });
 });
+
+//recipes  page
+app.get("/recipes", (req, res) => {
+  db.query("SELECT * FROM users").then(users => {
+    res.render("recipes", { recipe });
+  });
+});
+
 
 app.get("/users/:id", (req, res) => {
   const userId = req.params.id;

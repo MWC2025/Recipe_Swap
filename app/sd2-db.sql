@@ -25,11 +25,11 @@ USE `Recipe_Swap`;
 -- App database SQL
 
 -- Drop existing tables in FK‑safe order
-DROP TABLE IF EXISTS app_recipe_tag_links;
-DROP TABLE IF EXISTS app_swaps;
-DROP TABLE IF EXISTS app_recipes;
-DROP TABLE IF EXISTS app_tags;
-DROP TABLE IF EXISTS app_users;
+DROP TABLE IF EXISTS recipe_tags;
+DROP TABLE IF EXISTS swaps;
+DROP TABLE IF EXISTS recipes;
+DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS users;
 
 -- Users
 CREATE TABLE users (
@@ -49,8 +49,7 @@ CREATE TABLE recipes (
     ingredients   TEXT         NOT NULL,
     instructions  TEXT         NOT NULL,
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_app_recipes_author (author_id),
-    CONSTRAINT fk_app_recipes_author
+    CONSTRAINT fk_recipes_author
         FOREIGN KEY (author_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -62,12 +61,11 @@ CREATE TABLE tags (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Junction table Recipe–Tags
-CREATE TABLE recipe_tag_links (
+CREATE TABLE recipe_tags (
     recipe_id INT NOT NULL,
     tag_id    INT NOT NULL,
     PRIMARY KEY (recipe_id, tag_id),
-    INDEX idx_links_recipe (recipe_id),
-    INDEX idx_links_tag (tag_id),
+
     CONSTRAINT fk_app_links_recipe
         FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
         ON DELETE CASCADE,
@@ -86,9 +84,7 @@ CREATE TABLE swaps (
                          NOT NULL DEFAULT 'pending',
     created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME NULL,
-    INDEX idx_swaps_requester (requester_id),
-    INDEX idx_swaps_requested (requested_recipe_id),
-    INDEX idx_swaps_offered (offered_recipe_id),
+  
     CONSTRAINT fk_swaps_requester
         FOREIGN KEY (requester_id)        REFERENCES users(user_id)
         ON DELETE CASCADE,
