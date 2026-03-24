@@ -1,0 +1,21 @@
+extends layout
+block content
+  body
+    nav.pill-nav 
+     a.logo(href="/") RecipeSwap
+     a(href="/") Home
+     a(href="/users") Users
+     a.active(href="/recipes") Recipes
+     a(href="/about") About
+
+  h2.page-title Recipes
+
+  if recipes.length
+    .card-grid
+      each recipe in recipes
+        .card
+          h3= recipe.recipe_title
+          p= recipe.summary
+          a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
+  else
+    p No recipes found.

@@ -153,13 +153,14 @@ app.get("/users", (req, res) => {
   });
 });
 
-//recipes  page
-app.get("/recipes", (req, res) => {
-  db.query("SELECT * FROM users").then(users => {
-    res.render("recipes", { recipe });
+//recipe listings   page
+app.get("/recipes", function (req, res) {
+  db.query("SELECT * FROM recipes")
+    .then(function (rows) {
+      res.render("listings", { recipes: rows });
+    })
   });
-});
-
+  
 
 app.get("/users/:id", (req, res) => {
   const userId = req.params.id;
