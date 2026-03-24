@@ -20,23 +20,7 @@ SET time_zone = "+00:00";
 CREATE DATABASE IF NOT EXISTS `Recipe_Swap`;
 USE `Recipe_Swap`;
 
---
--- Table structure for table `test_table`
---
-DROP TABLE IF EXISTS `test_table`;
 
-CREATE TABLE `test_table` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(512) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `test_table`
---
-INSERT INTO `test_table` (`id`, `name`) VALUES
-(1, 'Lisa'),
-(2, 'Kimia');
 
 -- App database SQL
 
@@ -48,7 +32,7 @@ DROP TABLE IF EXISTS app_tags;
 DROP TABLE IF EXISTS app_users;
 
 -- Users
-CREATE TABLE app_users (
+CREATE TABLE users (
     user_id       INT AUTO_INCREMENT PRIMARY KEY,
     username      VARCHAR(50)  NOT NULL UNIQUE,
     email_address VARCHAR(255) NOT NULL UNIQUE,
@@ -57,7 +41,7 @@ CREATE TABLE app_users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Recipes
-CREATE TABLE app_recipes (
+CREATE TABLE recipes (
     recipe_id     INT AUTO_INCREMENT PRIMARY KEY,
     author_id     INT          NOT NULL,
     recipe_title  VARCHAR(150) NOT NULL,
@@ -67,33 +51,33 @@ CREATE TABLE app_recipes (
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_app_recipes_author (author_id),
     CONSTRAINT fk_app_recipes_author
-        FOREIGN KEY (author_id) REFERENCES app_users(user_id)
+        FOREIGN KEY (author_id) REFERENCES users(user_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Tags
-CREATE TABLE app_tags (
+CREATE TABLE tags (
     tag_id   INT AUTO_INCREMENT PRIMARY KEY,
     tag_name VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Junction table Recipe–Tags
-CREATE TABLE app_recipe_tag_links (
+CREATE TABLE recipe_tag_links (
     recipe_id INT NOT NULL,
     tag_id    INT NOT NULL,
     PRIMARY KEY (recipe_id, tag_id),
-    INDEX idx_app_links_recipe (recipe_id),
-    INDEX idx_app_links_tag (tag_id),
+    INDEX idx_links_recipe (recipe_id),
+    INDEX idx_links_tag (tag_id),
     CONSTRAINT fk_app_links_recipe
-        FOREIGN KEY (recipe_id) REFERENCES app_recipes(recipe_id)
+        FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_app_links_tag
-        FOREIGN KEY (tag_id) REFERENCES app_tags(tag_id)
+    CONSTRAINT fk_links_tag
+        FOREIGN KEY (tag_id) REFERENCES tags(tag_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Swaps
-CREATE TABLE app_swaps (
+CREATE TABLE swaps (
     swap_id             INT AUTO_INCREMENT PRIMARY KEY,
     requester_id        INT      NOT NULL,
     requested_recipe_id INT      NOT NULL,
@@ -102,28 +86,28 @@ CREATE TABLE app_swaps (
                          NOT NULL DEFAULT 'pending',
     created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME NULL,
-    INDEX idx_app_swaps_requester (requester_id),
-    INDEX idx_app_swaps_requested (requested_recipe_id),
-    INDEX idx_app_swaps_offered (offered_recipe_id),
-    CONSTRAINT fk_app_swaps_requester
-        FOREIGN KEY (requester_id)        REFERENCES app_users(user_id)
+    INDEX idx_swaps_requester (requester_id),
+    INDEX idx_swaps_requested (requested_recipe_id),
+    INDEX idx_swaps_offered (offered_recipe_id),
+    CONSTRAINT fk_swaps_requester
+        FOREIGN KEY (requester_id)        REFERENCES users(user_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_app_swaps_requested
-        FOREIGN KEY (requested_recipe_id) REFERENCES app_recipes(recipe_id)
+    CONSTRAINT fk_swaps_requested
+        FOREIGN KEY (requested_recipe_id) REFERENCES recipes(recipe_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_app_swaps_offered
-        FOREIGN KEY (offered_recipe_id)   REFERENCES app_recipes(recipe_id)
+    CONSTRAINT fk_swaps_offered
+        FOREIGN KEY (offered_recipe_id)   REFERENCES recipes(recipe_id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Sample data
 
-INSERT INTO app_users (username, email_address, password_hash) VALUES
+INSERT INTO users (username, email_address, password_hash) VALUES
 ('student_sarah',  'sarah@example.com',  'hash1'),
 ('coach_jamal',    'jamal@example.com',  'hash2'),
 ('parent_priya',   'priya@example.com',  'hash3');
 
-INSERT INTO app_recipes (author_id, recipe_title, summary, ingredients, instructions) VALUES
+INSERT INTO recipes (author_id, recipe_title, summary, ingredients, instructions) VALUES
 (1, 'Dorm Room Pasta',
  'Simple pasta dish for beginners',
  'pasta, tomato sauce, garlic, olive oil, salt, pepper',
@@ -133,17 +117,17 @@ INSERT INTO app_recipes (author_id, recipe_title, summary, ingredients, instruct
  'chicken breast, rice, broccoli, olive oil, spices',
  'Grill chicken; steam broccoli; cook rice; assemble in a bowl.');
 
-INSERT INTO app_tags (tag_name) VALUES
+INSERT INTO tags (tag_name) VALUES
 ('vegetarian'),
 ('quick'),
 ('high-protein');
 
-INSERT INTO app_recipe_tag_links (recipe_id, tag_id) VALUES
+INSERT INTO recipe_tag_links (recipe_id, tag_id) VALUES
 (1, 1),
 (1, 2),
 (2, 3);
 
-INSERT INTO app_swaps (requester_id, requested_recipe_id, offered_recipe_id, swap_status) VALUES
+INSERT INTO swaps (requester_id, requested_recipe_id, offered_recipe_id, swap_status) VALUES
 (1, 2, 1, 'pending');
 
 COMMIT;

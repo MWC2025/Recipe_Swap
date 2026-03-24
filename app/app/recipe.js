@@ -96,10 +96,10 @@ app.get("/users", (req, res) => {
 
 app.get("/users/:id", (req, res) => {
   const userId = req.params.id;
-  db.query("SELECT * FROM users WHERE app_user_id = ?", [userId]).then(user => {
+  db.query("SELECT * FROM app_users WHERE user_id = ?", [userId]).then(user => {
     if (!user.length) return res.send("User not found");
 
-    db.query("SELECT * FROM recipes WHERE app_user_id = ?", [userId]).then(recipes => {
+    db.query("SELECT * FROM app_recipes WHERE user_id = ?", [userId]).then(recipes => {
       res.render("profile", { user: user[0], recipes });
     });
   });
