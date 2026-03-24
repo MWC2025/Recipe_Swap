@@ -17,8 +17,8 @@ SET time_zone = "+00:00";
  /*!40101 SET NAMES utf8mb4 */;
 
 -- Ensure database exists and is selected
-CREATE DATABASE IF NOT EXISTS `sd2-db`;
-USE `sd2-db`;
+CREATE DATABASE IF NOT EXISTS `Recipe_Swap`;
+USE `Recipe_Swap`;
 
 --
 -- Table structure for table `test_table`
