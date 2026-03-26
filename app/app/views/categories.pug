@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  nav.pill-nav 
+    a.logo(href="/") RecipeSwap
+    a(href="/") Home
+    a(href="/users") Users
+    a(href="/recipes") Recipes
+    a.active(href="/tags") Categories
+
+  h2.page-title Categories
+
+  if tags && tags.length
+    .tag-list
+      each tag in tags
+        
+          a.btnflex(href=`/tags/${tag.tag_id}`)= tag.tag_name
+  else
+    p No categories found.

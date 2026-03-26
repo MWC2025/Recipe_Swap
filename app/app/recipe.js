@@ -181,12 +181,47 @@ app.get("/seed", function (req, res) {
       res.status(500).send("Error seeding data");
     });
 });
-//recipe filter page
-app.get("/tags", function(req, res) {
-   db.query("SELECT tag_name FROM tags")
+//recipe tags filter page
+app.get("/tags", function (req, res) {
+  db.query("SELECT tag_id, tag_name FROM tags ORDER BY tag_name")
     .then(function (tags) {
-      res.render("tags", { tags: tags });
+      res.render("categories", { tags });
+    });
+});
+
+// recipes for a single tag
+app.get("/tags/:id", function (req, res) {
+  const tagId = req.params.id;
+
+  const sql = `
+    SELECT r.recipe_id, r.recipe_title, r.summary, t.tag_name
+    FROM recipes r
+    JOIN recipe_tags rt ON r.recipe_id = rt.recipe_id
+    JOIN tags t ON rt.tag_id = t.tag_id
+    WHERE t.tag_id = ?
+    ORDER BY r.created_at DESC
+  `;
+
+  db.query(sql, [tagId])
+    .then(function (rows) {
+      if (!rows.length) {
+        return res.render("tags", {
+          tag_name: "Unknown tag",
+          recipes: []         
+        });
+      }
+
+      const tag_name = rows[0].tag_name;
+
+      res.render("tags", {
+        tag_name,
+        recipes: rows          
+      });
     })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading tag recipes");
+    });
 });
 
 //user profile page

@@ -1,12 +1,22 @@
 extends layout
 
 block content
+  body
+    nav.pill-nav 
+     a.logo(href="/") RecipeSwap
+     a(href="/") Home
+     a(href="/users") Users
+     a(href="/recipes") Recipes
+     a.active(href="/tags") Categories
+
   h2.page-title Recipes tagged: #{tag_name}
 
-  if recipes.length
-  .card-grid
-   each recipe in recipes
+  if recipes && recipes.length
+    .card-grid
+      each recipe in recipes
         .card
           h3= recipe.recipe_title
           p= recipe.summary
           a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
+  else
+    p No recipes found for this tag.
