@@ -1,14 +1,21 @@
 extends layout
 block content
+  nav.pill-nav 
+     a.logo(href="/") RecipeSwap
+     a(href="/") Home
+     a.active(href="/users") Users
+     a(href="/recipes") Recipes
+     a(href="/about") About    
+  
   .profile
     h2= user.username
-    p.email= user.email
+    p.email= user.email_address
 
   h3.section-title Recipes
 
   .card-grid
     each recipe in recipes
       .card
-        h4= recipe.title
-        p= recipe.description
+        h4= recipe.recipe_title
+        p= recipe.summary
         a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe

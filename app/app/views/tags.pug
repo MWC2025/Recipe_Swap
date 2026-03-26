@@ -1,11 +1,12 @@
 extends layout
 
 block content
-  h2.page-title Recipes tagged: #{tagName}
+  h2.page-title Recipes tagged: #{tag_name}
 
+  if recipes.length
   .card-grid
-    each recipe in recipes
-      .card
-        h4= recipe.title
-        p= recipe.description
-        a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
+   each recipe in recipes
+        .card
+          h3= recipe.recipe_title
+          p= recipe.summary
+          a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
