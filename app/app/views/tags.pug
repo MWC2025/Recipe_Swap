@@ -2,12 +2,17 @@ extends layout
 
 block content
   body
-    nav.pill-nav 
-     a.logo(href="/") RecipeSwap
-     a(href="/") Home
-     a(href="/users") Users
-     a(href="/recipes") Recipes
-     a.active(href="/tags") Categories
+   nav.pill-nav 
+    a.logo(href="/") RecipeSwap
+    a.active(href="/") Home
+    a(href="/users") Users
+    a(href="/recipes") Recipes
+    a(href="/tags") Categories 
+    
+    span.nav-spacer
+    
+    a.logonbtn(href="/signin") Sign in
+    a.logonbtn.primary(href="/signup") Sign up
 
   h2.page-title Recipes tagged: #{tag_name}
 

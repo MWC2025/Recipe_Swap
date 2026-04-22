@@ -8,12 +8,12 @@ header {
 .pill-nav {
   display: flex;           
   gap: 10px;   
-  margin-left: auto;          
+  margin-left: auto;  
+    font-weight: 600;
 }
 
 .pill-nav a {
   display: inline-block;
-  
   color: black;
   text-align: center;
   padding: 14px;
@@ -38,7 +38,22 @@ body {
   background: #f5f6fa;
 }
 
+.logonbtn {
+  
+  color: dodgerblue;
+  padding: 0.45rem 1.1rem;
+  font-weight: 600;
+}
 
+.primary {
+  background: dodgerblue;
+  color: #fff;
+}
+
+.logonbtn:hover {
+  background: dodgerblue;
+  color: #fff;
+}
 
 .logo {
   margin: 0;
@@ -46,7 +61,9 @@ body {
   color: black;
 }
 
-
+.nav-spacer {
+  margin-left: auto;
+}
 
 .nav-links a {
   color: white;
