@@ -8,6 +8,9 @@ var app = express();
 app.set('view engine', 'pug');
 app.set('views', './app/views');
 
+//turns form data from browser into a normal js object
+app.use(express.urlencoded({ extended: true }));
+
 // Add static files location
 app.use(express.static("static"));
 
@@ -248,12 +251,20 @@ app.get("/users/:id", (req, res) => {
 });
 
 //recipe listings   page
-app.get("/recipes", function (req, res) {
-  db.query("SELECT recipe_id, recipe_title, summary FROM recipes")
+  app.get("/recipes", function (req, res) {
+  const sql = `
+    SELECT r.recipe_id, r.recipe_title, r.summary, u.username
+    FROM recipes r
+    JOIN users u ON r.author_id = u.user_id
+    ORDER BY r.created_at DESC
+  `;
+
+  db.query(sql)
     .then(function (listings) {
       res.render("listings", { recipes: listings });
-    })
-  });
+    });
+});
+
 
   //recipe detail page
   app.get("/recipes/:id", function (req, res) {

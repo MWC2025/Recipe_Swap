@@ -2,6 +2,8 @@ require("dotenv").config();
 
 const mysql = require('mysql2/promise');
 
+
+
 const config = {
   db: { /* do not put password or any sensitive info here, done only for demo */
     host: process.env.DB_CONTAINER,

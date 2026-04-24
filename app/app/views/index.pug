@@ -1,16 +1,43 @@
 extends layout
-block content
- nav.pill-nav 
-    a.logo(href="/") RecipeSwap
-    a.active(href="/") Home
-    a(href="/users") Users
-    a(href="/recipes") Recipes
-    a(href="/tags") Categories 
-    
-    span.nav-spacer
-    a.logonbtn(href="/signin") Sign in
-    a.logonbtn.primary(href="/signup") Sign up
 
- p Homepage coming soon...
+
+
+block content
+  nav.pill-nav 
+     a.logo(href="/") RecipeSwap
+     a.active(href="/") Home
+     a(href="/users") Users
+     a(href="/recipes") Recipes
+     a(href="/tags") Categories  
+
+  section.hero
+    .hero-text
+      h1 Share and swap recipes with your community
+      p Discover new meals, trade favourites, and connect with other home cooks.
+      .hero-actions
+        a.btn(href="/recipes") Browse Recipes
+        a.btn(href="/tags") Explore Categories
+
+  section.home-grid
+    .main-column
+      .section-card
+        h2 Featured Recipes
+       
+
+      .section-card
+        h2 Browse by Category
+        .tag-list
+      
+
+    aside.sidebar
+      .section-card
+        h2 Community Cooks
+        ul
+        
+
+      .section-card
+        h2 Recipe Swaps
+        p View active swaps and share your favourites with others.
+        a.btn(href="/swaps") View Swaps
     
     

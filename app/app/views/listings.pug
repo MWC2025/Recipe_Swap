@@ -15,6 +15,7 @@ block content
       each recipe in recipes
         .card
           h3= recipe.recipe_title
+          h4= recipe.username 
           p= recipe.summary
           a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
   else
