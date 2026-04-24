@@ -183,9 +183,14 @@ app.get("/seed", function (req, res) {
     "INSERT INTO swaps (requester_id, requested_recipe_id, offered_recipe_id, swap_status) VALUES \
     (1, 2, 1, 'pending'), \
     (5, 4, 5, 'accepted'), \
-    (2, 3, 2, 'declined')"
+    (2, 3, 2, 'declined')",
 
-    
+    "INSERT INTO reviews (recipe_id, user_id, rating, comment) VALUES \
+    (1, 2, 4, 'Quick and easy for busy evenings.'),\
+    (2, 3, 5, 'Great meal prep option and very filling.'),\
+    (5, 1, 4, 'Really cheap and easy to make.');"
+
+  
   ];
 
   steps.reduce(function (p, sql) {
