@@ -1,0 +1,17 @@
+extends layout
+
+block content
+ 
+  a.btn.active(href="/recipes") Back to all Recipes
+    
+
+  h1 Request Swap
+  p You want to swap for: #{targetRecipe.recipe_title}
+
+  form(method="POST", action="/recipes/" + targetRecipe.recipe_id + "/swap")
+    label(for="offered_recipe_id") Choose one of your recipes:
+    select(name="offered_recipe_id", id="offered_recipe_id")
+      each item of offeredRecipes
+        option(value=item.recipe_id)= item.recipe_title
+
+    button(type="submit") Send Swap Request

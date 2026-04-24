@@ -88,7 +88,22 @@ app.get("/init", function (req, res) {
       CONSTRAINT fk_swaps_offered \
         FOREIGN KEY (offered_recipe_id)   REFERENCES recipes(recipe_id) \
         ON DELETE CASCADE \
-    )"
+    )",
+
+    ("CREATE TABLE reviews ( \
+      review_id    INT AUTO_INCREMENT PRIMARY KEY,\
+      recipe_id    INT NOT NULL,\
+     user_id      INT NOT NULL,\
+      rating       INT NOT NULL,\
+      comment      TEXT NOT NULL,\
+     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+      CONSTRAINT fk_reviews_recipe \
+        FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)\
+        ON DELETE CASCADE,\
+     CONSTRAINT fk_reviews_user\
+        FOREIGN KEY (user_id) REFERENCES users(user_id) \
+        ON DELETE CASCADE \
+    )")
   ];
 
   Promise.all(queries.map(function (q) { return db.query(q); }))
@@ -169,6 +184,8 @@ app.get("/seed", function (req, res) {
     (1, 2, 1, 'pending'), \
     (5, 4, 5, 'accepted'), \
     (2, 3, 2, 'declined')"
+
+    
   ];
 
   steps.reduce(function (p, sql) {
@@ -283,6 +300,63 @@ app.get("/users/:id", (req, res) => {
       ).then(function (tags) {
         res.render("recipes", { recipe: recipe, tags: tags });
       });
+    });
+});
+
+//swaps form route 
+app.get("/recipes/:id/swap", function (req, res) {
+  const recipeId = req.params.id;
+
+  Promise.all([
+    db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId]),
+    db.query("SELECT * FROM recipes WHERE author_id != 1")
+  ]).then(function ([targetRows, offeredRecipes]) {
+    if (!targetRows.length) return res.send("Recipe not found");
+    res.render("swap_form", {
+      targetRecipe: targetRows[0],
+      offeredRecipes
+    });
+  });
+});
+//swaps post route
+app.post("/recipes/:id/swap", function (req, res) {
+  const requested_recipe_id = req.params.id;
+  const requester_id = 1; 
+  const offered_recipe_id = req.body.offered_recipe_id;
+
+  db.query(
+    "INSERT INTO swaps (requester_id, requested_recipe_id, offered_recipe_id, swap_status) VALUES (?, ?, ?, 'pending')",
+    [requester_id, requested_recipe_id, offered_recipe_id]
+  ).then(function () {
+    res.redirect("/swaps");
+  }).catch(function (err) {
+    console.error(err);
+    res.status(500).send("Error creating swap request");
+    console.log(req.body);
+  });
+});
+
+app.get("/swaps", function (req, res) {
+  const sql = `
+    SELECT 
+      s.swap_id,
+      s.swap_status,
+      requested.recipe_title AS requested_title,
+      offered.recipe_title AS offered_title
+    FROM swaps s
+    JOIN recipes requested ON s.requested_recipe_id = requested.recipe_id
+    JOIN recipes offered ON s.offered_recipe_id = offered.recipe_id
+    ORDER BY s.created_at DESC
+    
+  `;
+
+  db.query(sql)
+    .then(function (swaps) {
+      res.render("swaps", { swaps: swaps });
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading swaps");
     });
 });
 

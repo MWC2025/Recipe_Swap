@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  nav.pill-nav 
+    a.logo(href="/") RecipeSwap
+    a(href="/") Home
+    a(href="/users") Users
+    a.active(href="/recipes") Recipes
+    a(href="/tags") Categories
+
+  h1 Recipe Swaps
+
+  if swaps.length
+    each swap in swaps
+      div
+        p Swap ID: #{swap.swap_id}
+        p Requested: #{swap.requested_title}
+        p Offered: #{swap.offered_title}re
+        p Status: #{swap.swap_status}
+        hr
+  else
+    p No swaps yet.
