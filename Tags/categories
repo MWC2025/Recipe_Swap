@@ -1,0 +1,57 @@
+Tags/ categories
+
+
+-- =========================
+-- CATEGORIES TABLE
+-- =========================
+CREATE TABLE IF NOT EXISTS categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL
+);
+
+-- =========================
+-- TAGS TABLE
+-- =========================
+CREATE TABLE IF NOT EXISTS tags (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL
+);
+
+-- =========================
+-- RECIPE_TAGS TABLE (JOIN TABLE)
+-- =========================
+CREATE TABLE IF NOT EXISTS recipe_tags (
+  recipe_id INT,
+  tag_id INT,
+  PRIMARY KEY (recipe_id, tag_id),
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+  FOREIGN KEY (tag_id) REFERENCES tags(id)
+);
+
+-- =========================
+-- SAMPLE DATA (CATEGORIES)
+-- =========================
+INSERT INTO categories (name) VALUES
+('Dessert'),
+('Vegetarian'),
+('Quick Meals');
+
+-- =========================
+-- SAMPLE DATA (TAGS)
+-- =========================
+INSERT INTO tags (name) VALUES
+('Easy'),
+('Healthy'),
+('Dinner'),
+('Sweet');
+
+-- =========================
+-- SAMPLE RELATION DATA
+-- (Make sure recipes already exist!)
+-- =========================
+INSERT INTO recipe_tags (recipe_id, tag_id) VALUES
+(1, 1),
+(1, 4),
+(2, 2),
+(3, 1),
+(3, 3);
