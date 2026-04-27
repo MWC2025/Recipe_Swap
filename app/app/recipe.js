@@ -311,10 +311,11 @@ app.get("/users/:id", (req, res) => {
 //swaps form route 
 app.get("/recipes/:id/swap", function (req, res) {
   const recipeId = req.params.id;
+  const currentUserId = 1;
 
   Promise.all([
     db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId]),
-    db.query("SELECT * FROM recipes WHERE author_id != 1")
+ db.query("SELECT * FROM recipes WHERE author_id != ?", [currentUserId])
   ]).then(function ([targetRows, offeredRecipes]) {
     if (!targetRows.length) return res.send("Recipe not found");
     res.render("swap_form", {
@@ -346,9 +347,13 @@ app.get("/swaps", function (req, res) {
     SELECT 
       s.swap_id,
       s.swap_status,
+      u.user_id AS requester_id,
+      u.username,
       requested.recipe_title AS requested_title,
       offered.recipe_title AS offered_title
     FROM swaps s
+    JOIN users u
+    ON s.requester_id = u.user_id
     JOIN recipes requested ON s.requested_recipe_id = requested.recipe_id
     JOIN recipes offered ON s.offered_recipe_id = offered.recipe_id
     ORDER BY s.created_at DESC
@@ -362,6 +367,8 @@ app.get("/swaps", function (req, res) {
     .catch(function (err) {
       console.error(err);
       res.status(500).send("Error loading swaps");
+      console.log(req.body);
+
     });
 });
 
