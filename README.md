@@ -28,4 +28,4 @@ Ethical issues
 
 Code Of Conduct
 
-Refer to these for user profiles, ethics, and collaboration guidelines.
+Refer to these for user profiles, ethics, and collaboration guideline.
