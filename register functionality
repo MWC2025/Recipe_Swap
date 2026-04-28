@@ -1,1 +1,27 @@
+doctype html
+html
+  head
+    title Register - Recipe Swap
+  body
+    h1 Register for Recipe Swap
 
+    if error
+      p(style="color:red")= error
+
+    form(method="POST", action="/register")
+      div
+        label Username
+        input(type="text", name="username", required)
+
+      div
+        label Email Address
+        input(type="email", name="email_address", required)
+
+      div
+        label Password
+        input(type="password", name="password", required)
+
+      button(type="submit") Register
+
+    p Already have an account?
+      a(href="/login") Login here
