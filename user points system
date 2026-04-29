@@ -1,0 +1,22 @@
+app.get("/points", requireLogin, async (req, res) => {
+  try {
+    const [users] = await db.query(
+      `
+      SELECT 
+        user_id,
+        username,
+        points
+      FROM users
+      ORDER BY points DESC
+      `
+    );
+
+    res.render("points", { users });
+  } catch (err) {
+    console.error(err);
+    res.render("points", {
+      users: [],
+      error: "Could not load user points."
+    });
+  }
+});

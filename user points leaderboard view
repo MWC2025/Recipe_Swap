@@ -1,0 +1,26 @@
+doctype html
+html
+  head
+    title User Points - Recipe Swap
+  body
+    h1 User Points Leaderboard
+
+    if error
+      p(style="color:red")= error
+
+    if users.length === 0
+      p No users found.
+    else
+      table(border="1", cellpadding="8")
+        thead
+          tr
+            th Username
+            th Points
+        tbody
+          each user in users
+            tr
+              td= user.username
+              td= user.points
+
+    p
+      a(href="/profile") Back to Profile

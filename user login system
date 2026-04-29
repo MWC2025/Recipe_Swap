@@ -1,0 +1,147 @@
+const express = require("express");
+const path = require("path");
+const bcrypt = require("bcrypt");
+const session = require("express-session");
+const mysql = require("mysql2/promise");
+
+const app = express();
+
+const db = mysql.createPool({
+  host: process.env.DB_HOST || "db",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "password",
+  database: process.env.DB_NAME || "recipe_swap",
+  waitForConnections: true,
+  connectionLimit: 10
+});
+
+app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "views"));
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+
+app.use(session({
+  secret: "recipe_swap_sprint4_secret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 2
+  }
+}));
+
+app.use((req, res, next) => {
+  res.locals.currentUser = req.session.user || null;
+  next();
+});
+
+function requireLogin(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect("/login");
+  }
+  next();
+}
+
+app.get("/", (req, res) => {
+  res.redirect("/login");
+});
+
+app.get("/register", (req, res) => {
+  res.render("register", { error: null });
+});
+
+app.post("/register", async (req, res) => {
+  const { username, email_address, password } = req.body;
+
+  if (!username || !email_address || !password) {
+    return res.render("register", {
+      error: "Please complete all fields."
+    });
+  }
+
+  try {
+    const password_hash = await bcrypt.hash(password, 10);
+
+    await db.query(
+      "INSERT INTO users (username, email_address, password_hash) VALUES (?, ?, ?)",
+      [username, email_address, password_hash]
+    );
+
+    res.redirect("/login");
+  } catch (err) {
+    console.error(err);
+    res.render("register", {
+      error: "Username or email already exists."
+    });
+  }
+});
+
+app.get("/login", (req, res) => {
+  res.render("login", { error: null });
+});
+
+app.post("/login", async (req, res) => {
+  const { email_address, password } = req.body;
+
+  if (!email_address || !password) {
+    return res.render("login", {
+      error: "Please enter your email and password."
+    });
+  }
+
+  try {
+    const [users] = await db.query(
+      "SELECT * FROM users WHERE email_address = ?",
+      [email_address]
+    );
+
+    if (users.length === 0) {
+      return res.render("login", {
+        error: "Invalid email or password."
+      });
+    }
+
+    const user = users[0];
+
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.render("login", {
+        error: "Invalid email or password."
+      });
+    }
+
+    req.session.user = {
+      user_id: user.user_id,
+      username: user.username,
+      email_address: user.email_address
+    };
+
+    res.redirect("/profile");
+  } catch (err) {
+    console.error(err);
+    res.render("login", {
+      error: "Something went wrong. Please try again."
+    });
+  }
+});
+
+app.get("/profile", requireLogin, (req, res) => {
+  res.render("profile", {
+    user: req.session.user
+  });
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login");
+  });
+});
+
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Recipe Swap app running on port ${PORT}`);
+});

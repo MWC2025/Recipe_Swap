@@ -1,0 +1,35 @@
+doctype html
+
+html
+
+  head
+
+    title Login - Recipe Swap
+
+  body
+
+    h1 Login to Recipe Swap
+
+    if error
+
+      p(style="color:red")= error
+
+    form(method="POST", action="/login")
+
+      div
+
+        label Email Address
+
+        input(type="email", name="email_address", required)
+
+      div
+
+        label Password
+
+        input(type="password", name="password", required)
+
+      button(type="submit") Login
+
+    p Do not have an account?
+
+      a(href="/register") Register here
