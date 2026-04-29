@@ -372,6 +372,40 @@ app.get("/swaps", function (req, res) {
     });
 });
 
+//reviews post route
+app.post("/recipes/:id/reviews", function (req, res) {
+  const recipeId = req.params.id;
+  const userId = 1;
+  const { rating, comment } = req.body;
+
+  db.query(
+    "INSERT INTO reviews (recipe_id, user_id, rating, comment) VALUES (?, ?, ?, ?)",
+    [recipeId, userId, rating, comment]
+  ).then(function () {
+    res.redirect("/recipes/" + recipeId);
+  }).catch(function (err) {
+    console.error(err);
+    res.status(500).send("Error saving review");
+  });
+});
+
+//reviews form route 
+app.get("/recipes/:id/reviews", function (req, res) {
+  const recipeId = req.params.id;
+  const currentUserId = 1;
+
+  Promise.all([
+    db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId]),
+ db.query("SELECT * FROM recipes WHERE author_id != ?", [currentUserId])
+  ]).then(function ([targetRows, offeredRecipes]) {
+    if (!targetRows.length) return res.send("Recipe not found");
+    res.render("review_form", {
+      targetRecipe: targetRows[0],
+      offeredRecipes
+    });
+  });
+});
+
 
 // Start server on port 3000
 app.listen(3000,function(){

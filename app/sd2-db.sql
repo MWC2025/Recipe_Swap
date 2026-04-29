@@ -16,13 +16,12 @@ SET time_zone = "+00:00";
  /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
  /*!40101 SET NAMES utf8mb4 */;
 
--- Ensure database exists and is selected
+
 CREATE DATABASE IF NOT EXISTS `Recipe_Swap`;
 USE `Recipe_Swap`;
 
 
 
---- Drop existing tables in FK-safe order
 DROP TABLE IF EXISTS recipe_tags;
 DROP TABLE IF EXISTS swaps;
 DROP TABLE IF EXISTS reviews;
@@ -30,7 +29,6 @@ DROP TABLE IF EXISTS recipes;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS users;
 
--- Core tables
 CREATE TABLE users (
   user_id       INT AUTO_INCREMENT PRIMARY KEY,
   username      VARCHAR(50)  NOT NULL UNIQUE,
@@ -104,7 +102,6 @@ CREATE TABLE reviews (
     ON DELETE CASCADE
 );
 
--- Seed data
 DELETE FROM recipe_tags;
 DELETE FROM swaps;
 DELETE FROM reviews;
@@ -177,7 +174,7 @@ INSERT INTO reviews (recipe_id, user_id, rating, comment) VALUES
   (1, 2, 4, 'Quick and easy for busy evenings.'),
   (2, 3, 5, 'Great meal prep option and very filling.'),
   (5, 1, 4, 'Really cheap and easy to make.');
-  
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
