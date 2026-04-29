@@ -406,6 +406,53 @@ app.get("/recipes/:id/reviews", function (req, res) {
   });
 });
 
+app.get("/matches", requireLogin, async (req, res) => {
+  const userId = req.session.user.user_id;
+
+  try {
+    const [matches] = await db.query(
+      `
+      SELECT 
+        r.recipe_id,
+        r.recipe_title,
+        r.summary,
+        r.ingredients,
+        r.instructions,
+        u.username AS author_name,
+        COUNT(DISTINCT shared_tags.tag_id) AS matching_tags
+      FROM recipes r
+      JOIN users u ON r.author_id = u.user_id
+      JOIN recipe_tag_links rtl ON r.recipe_id = rtl.recipe_id
+      JOIN (
+        SELECT DISTINCT rtl2.tag_id
+        FROM recipes my_recipes
+        JOIN recipe_tag_links rtl2 
+          ON my_recipes.recipe_id = rtl2.recipe_id
+        WHERE my_recipes.author_id = ?
+      ) AS shared_tags 
+        ON rtl.tag_id = shared_tags.tag_id
+      WHERE r.author_id != ?
+      GROUP BY 
+        r.recipe_id,
+        r.recipe_title,
+        r.summary,
+        r.ingredients,
+        r.instructions,
+        u.username
+      ORDER BY matching_tags DESC, r.created_at DESC
+      `,
+      [userId, userId]
+    );
+
+    res.render("matches", { matches });
+  } catch (err) {
+    console.error(err);
+    res.render("matches", {
+      matches: [],
+      error: "Could not load recipe matches."
+    });
+  }
+});
 
 // Start server on port 3000
 app.listen(3000,function(){

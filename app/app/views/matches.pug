@@ -1,0 +1,32 @@
+extends layout
+
+block content
+  nav.pill-nav
+    a.logo(href="/") RecipeSwap
+    a(href="/") Home
+    a(href="/users") Users
+    a.active(href="/recipes") Recipes
+    a(href="/tags") Categories
+
+  h1 Recommended Recipe Matches
+  p These recipes are matched based on tags from your uploaded recipes.
+
+  if error
+    p(style="color:red")= error
+
+  if matches.length === 0
+    p No matches found yet. Try adding recipes with tags first.
+  else
+    each recipe in matches
+      div(style="border:1px solid #ccc; padding:10px; margin-bottom:10px;")
+        h2= recipe.recipe_title
+        p
+          strong Author:
+          |  #{recipe.author_name}
+        p
+          strong Summary:
+          |  #{recipe.summary}
+        p
+          strong Matching tags:
+          |  #{recipe.matching_tags}
+        a(href=`/recipes/${recipe.recipe_id}`) View recipe
