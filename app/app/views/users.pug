@@ -7,6 +7,15 @@ block content
      a(href="/recipes") Recipes
      a(href="/tags") Categories 
      a(href="/reviews") Reviews
+     if loggedIn
+      span.nav-spacer
+      a(href="/profile") Profile
+      a(href="/swaps") Swaps
+      a(href="/logout") Logout
+     else  
+      span.nav-spacer
+      a.logonbtn(href="/signin") Sign in
+      a.logonbtn.primary(href="/signup") Sign up
 
   h2.page-title Users
 

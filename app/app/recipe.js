@@ -26,6 +26,13 @@ app.use(session({
   cookie: { secure: false }
 }));
 
+app.use(function (req, res, next) {
+  res.locals.loggedIn = req.session.loggedIn || false;
+  res.locals.currentUserId = req.session.uid || null;
+  res.locals.currentUsername = req.session.username || null;
+  next();
+});
+
 // Create a route for root - /
 app.get("/", function(req, res) {
     
@@ -472,6 +479,13 @@ app.get("/signup", function (req, res) {
 //sign in route
 app.get("/signin", function (req, res) {
   res.render("signin");
+});
+
+//logout route
+app.get("/logout", function (req, res) {
+  req.session.destroy(function () {
+    res.redirect("/");
+  });
 });
 
 //register post route 

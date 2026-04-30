@@ -1,6 +1,26 @@
 extends layout
 
 block content
+  nav.pill-nav 
+    a.logo(href="/") RecipeSwap
+    a(href="/") Home
+    a(href="/users") Users
+    a(href="/recipes") Recipes
+    a(href="/tags") Categories
+    a.active(href="/reviews") Reviews
+    
+    if loggedIn
+      span.nav-spacer
+      a(href="/profile") Profile
+      a(href="/swaps") Swaps
+      a(href="/logout") Logout
+    else  
+      span.nav-spacer
+      a.logonbtn(href="/signin") Sign in
+      a.logonbtn.primary(href="/signup") Sign up
+
+  a.btn.active(href="/") Back to Homepage
+
   h1 Login here
 
   form(action="/authenticate", method="POST")
