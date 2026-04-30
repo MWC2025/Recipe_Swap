@@ -4,11 +4,12 @@ block content
   nav.pill-nav 
     a.logo(href="/") RecipeSwap
     a(href="/") Home
-    a(href="/users") Users
     a(href="/recipes") Recipes
     a(href="/tags") Categories
     a(href="/reviews") Reviews
-    if loggedIn
+    if isAdmin
+      a.primary Admin
+      a(href="/users") Users    if loggedIn
       span.nav-spacer
       a(href="/profile") Profile
       a.active(href="/swaps") Swaps

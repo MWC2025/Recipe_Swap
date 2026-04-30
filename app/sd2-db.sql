@@ -29,13 +29,13 @@ DROP TABLE IF EXISTS recipes;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS users;
 
-CREATE TABLE users (
-  user_id       INT AUTO_INCREMENT PRIMARY KEY,
-  username      VARCHAR(50)  NOT NULL UNIQUE,
-  email_address VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE users ( \
+  user_id INT AUTO_INCREMENT PRIMARY KEY, \
+  username VARCHAR(50) NOT NULL UNIQUE, \
+  email_address VARCHAR(255) NOT NULL UNIQUE, \
+  password_hash VARCHAR(255) NOT NULL, \
+  is_admin BOOLEAN NOT NULL DEFAULT FALSE, \
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP \
 
 CREATE TABLE recipes (
   recipe_id     INT AUTO_INCREMENT PRIMARY KEY,
@@ -109,13 +109,12 @@ DELETE FROM recipes;
 DELETE FROM tags;
 DELETE FROM users;
 
-INSERT INTO users (username, email_address, password_hash) VALUES
-  
-  ('student_sarah',  'sarah@example.com',  '$2b$10$gFZpa4AWcybnWJ50Sy4VNebRgrrUgWhlJxbDVC3ON2ay0nYejoX06'), 
-  ('coach_jamal',    'jamal@example.com',  '$2b$10$VoB/UXpyHSSYd7KSzXnJneURDP1nTSzAs5cmiwTW2/KkUy.i96DdK'), 
-  ('parent_priya',   'priya@example.com',  '$2b$10$OZ3s1j.sRrg8WE7.MSGuZuy3G0ZxqElqi09z/Mx1iVOJG7l8u/6VC'), 
-  ('gym_gabriel',    'gabriel@example.com','$2b$10$xqhn8CjhhAkpfLTM/YeomOM6EQx58mwVoz24vmXeVC/SpwGgz9s4q'),
-  ('veggie_victoria','victoria@example.com','$2b$10$s5Fqtzd3GWQlDfYgLz3f1.85G6ZsKbEdj5bohLXPc4ZB9ZvTB5Vaa');
+INSERT INTO users (username, email_address, password_hash) VALUES \
+  ('admin_sarah',  'sarah@example.com',  '$2b$10$gFZpa4AWcybnWJ50Sy4VNebRgrrUgWhlJxbDVC3ON2ay0nYejoX06', TRUE) \
+  ('coach_jamal',    'jamal@example.com',  '$2b$10$VoB/UXpyHSSYd7KSzXnJneURDP1nTSzAs5cmiwTW2/KkUy.i96DdK', FALSE)  \
+  ('parent_priya',   'priya@example.com',  '$2b$10$OZ3s1j.sRrg8WE7.MSGuZuy3G0ZxqElqi09z/Mx1iVOJG7l8u/6VC', FALSE) \
+  ('gym_gabriel',    'gabriel@example.com','$2b$10$xqhn8CjhhAkpfLTM/YeomOM6EQx58mwVoz24vmXeVC/SpwGgz9s4q', FALSE) \
+  ('veggie_victoria','victoria@example.com','$2b$10$s5Fqtzd3GWQlDfYgLz3f1.85G6ZsKbEdj5bohLXPc4ZB9ZvTB5Vaa', FALSE),
 
 INSERT INTO recipes (author_id, recipe_title, summary, ingredients, instructions) VALUES
   (1, 'Dorm Room Pasta',

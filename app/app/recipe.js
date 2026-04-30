@@ -7,18 +7,19 @@ const { User } = require("./models/user");
 var app = express();
 
 // Use the Pug templating engine
-app.set('view engine', 'pug');
-app.set('views', './app/views');
+app.set("view engine", "pug");
+app.set("views", "./app/views");
 
-//turns form data from browser into a normal js object
+// turns form data from browser into a normal js object
 app.use(express.urlencoded({ extended: true }));
 
 // Add static files location
 app.use(express.static("static"));
 
 // Get the functions in the db.js file to use
-const db = require('./services/db');
+const db = require("./services/db");
 
+// Session middleware
 app.use(session({
   secret: "recipe-swap-secret-key",
   resave: false,
@@ -26,19 +27,39 @@ app.use(session({
   cookie: { secure: false }
 }));
 
+// Make session info available in all Pug templates
 app.use(function (req, res, next) {
   res.locals.loggedIn = req.session.loggedIn || false;
   res.locals.currentUserId = req.session.uid || null;
   res.locals.currentUsername = req.session.username || null;
+  res.locals.isAdmin = req.session.isAdmin || false;
   next();
 });
 
-// Create a route for root - /
-app.get("/", function(req, res) {
-    
-    res.render("index");
-});
+// Protected route middleware
+function requireLogin(req, res, next) {
+  if (!req.session.loggedIn || !req.session.uid) {
+    return res.redirect("/signin");
+  }
+  next();
+}
 
+function requireAdmin(req, res, next) {
+  if (!req.session.loggedIn || !req.session.uid) {
+    return res.redirect("/signin");
+  }
+
+  if (!req.session.isAdmin) {
+    return res.status(403).send("Access denied");
+  }
+
+  next();
+}
+
+// Home route
+app.get("/", function (req, res) {
+  res.render("index");
+});
 
 app.get("/init", function (req, res) {
   const queries = [
@@ -50,34 +71,35 @@ app.get("/init", function (req, res) {
     "DROP TABLE IF EXISTS users",
 
     "CREATE TABLE users ( \
-      user_id       INT AUTO_INCREMENT PRIMARY KEY, \
-      username      VARCHAR(50)  NOT NULL UNIQUE, \
+      user_id INT AUTO_INCREMENT PRIMARY KEY, \
+      username VARCHAR(50) NOT NULL UNIQUE, \
       email_address VARCHAR(255) NOT NULL UNIQUE, \
       password_hash VARCHAR(255) NOT NULL, \
-      created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP \
-    )",
+      is_admin BOOLEAN NOT NULL DEFAULT FALSE, \
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP \
+)",
 
     "CREATE TABLE recipes ( \
-      recipe_id     INT AUTO_INCREMENT PRIMARY KEY, \
-      author_id     INT          NOT NULL, \
-      recipe_title  VARCHAR(150) NOT NULL, \
-      summary       TEXT         NOT NULL, \
-      ingredients   TEXT         NOT NULL, \
-      instructions  TEXT         NOT NULL, \
-      created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+      recipe_id INT AUTO_INCREMENT PRIMARY KEY, \
+      author_id INT NOT NULL, \
+      recipe_title VARCHAR(150) NOT NULL, \
+      summary TEXT NOT NULL, \
+      ingredients TEXT NOT NULL, \
+      instructions TEXT NOT NULL, \
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
       CONSTRAINT fk_recipes_author \
         FOREIGN KEY (author_id) REFERENCES users(user_id) \
         ON DELETE CASCADE \
     )",
 
     "CREATE TABLE tags ( \
-      tag_id   INT AUTO_INCREMENT PRIMARY KEY, \
+      tag_id INT AUTO_INCREMENT PRIMARY KEY, \
       tag_name VARCHAR(50) NOT NULL UNIQUE \
     )",
 
     "CREATE TABLE recipe_tags ( \
       recipe_id INT NOT NULL, \
-      tag_id    INT NOT NULL, \
+      tag_id INT NOT NULL, \
       PRIMARY KEY (recipe_id, tag_id), \
       CONSTRAINT fk_app_links_recipe \
         FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) \
@@ -88,39 +110,38 @@ app.get("/init", function (req, res) {
     )",
 
     "CREATE TABLE swaps ( \
-      swap_id             INT AUTO_INCREMENT PRIMARY KEY, \
-      requester_id        INT      NOT NULL, \
-      requested_recipe_id INT      NOT NULL, \
-      offered_recipe_id   INT      NOT NULL, \
-      swap_status         ENUM('pending','accepted','declined','cancelled') \
-                         NOT NULL DEFAULT 'pending', \
-      created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
-      updated_at          DATETIME NULL, \
+      swap_id INT AUTO_INCREMENT PRIMARY KEY, \
+      requester_id INT NOT NULL, \
+      requested_recipe_id INT NOT NULL, \
+      offered_recipe_id INT NOT NULL, \
+      swap_status ENUM('pending','accepted','declined','cancelled') NOT NULL DEFAULT 'pending', \
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+      updated_at DATETIME NULL, \
       CONSTRAINT fk_swaps_requester \
-        FOREIGN KEY (requester_id)        REFERENCES users(user_id) \
+        FOREIGN KEY (requester_id) REFERENCES users(user_id) \
         ON DELETE CASCADE, \
       CONSTRAINT fk_swaps_requested \
         FOREIGN KEY (requested_recipe_id) REFERENCES recipes(recipe_id) \
         ON DELETE CASCADE, \
       CONSTRAINT fk_swaps_offered \
-        FOREIGN KEY (offered_recipe_id)   REFERENCES recipes(recipe_id) \
+        FOREIGN KEY (offered_recipe_id) REFERENCES recipes(recipe_id) \
         ON DELETE CASCADE \
     )",
 
-    ("CREATE TABLE reviews ( \
-      review_id    INT AUTO_INCREMENT PRIMARY KEY,\
-      recipe_id    INT NOT NULL,\
-     user_id      INT NOT NULL,\
-      rating       INT NOT NULL,\
-      comment      TEXT NOT NULL,\
-     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+    "CREATE TABLE reviews ( \
+      review_id INT AUTO_INCREMENT PRIMARY KEY, \
+      recipe_id INT NOT NULL, \
+      user_id INT NOT NULL, \
+      rating INT NOT NULL, \
+      comment TEXT NOT NULL, \
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
       CONSTRAINT fk_reviews_recipe \
-        FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id)\
-        ON DELETE CASCADE,\
-     CONSTRAINT fk_reviews_user\
+        FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) \
+        ON DELETE CASCADE, \
+      CONSTRAINT fk_reviews_user \
         FOREIGN KEY (user_id) REFERENCES users(user_id) \
         ON DELETE CASCADE \
-    )")
+    )"
   ];
 
   Promise.all(queries.map(function (q) { return db.query(q); }))
@@ -135,19 +156,19 @@ app.get("/init", function (req, res) {
 
 app.get("/seed", function (req, res) {
   const steps = [
-    "DELETE FROM recipe_tags",
+  "DELETE FROM recipe_tags",
     "DELETE FROM reviews",
     "DELETE FROM swaps",
     "DELETE FROM recipes",
     "DELETE FROM tags",
     "DELETE FROM users",
 
-    "INSERT INTO users (username, email_address, password_hash) VALUES \
-    ('student_sarah',  'sarah@example.com',  '$2b$10$gFZpa4AWcybnWJ50Sy4VNebRgrrUgWhlJxbDVC3ON2ay0nYejoX06'), \
-    ('coach_jamal',    'jamal@example.com',  '$2b$10$VoB/UXpyHSSYd7KSzXnJneURDP1nTSzAs5cmiwTW2/KkUy.i96DdK'), \
-    ('parent_priya',   'priya@example.com',  '$2b$10$OZ3s1j.sRrg8WE7.MSGuZuy3G0ZxqElqi09z/Mx1iVOJG7l8u/6VC'), \
-    ('gym_gabriel',    'gabriel@example.com','$2b$10$xqhn8CjhhAkpfLTM/YeomOM6EQx58mwVoz24vmXeVC/SpwGgz9s4q'), \
-    ('veggie_victoria','victoria@example.com','$2b$10$s5Fqtzd3GWQlDfYgLz3f1.85G6ZsKbEdj5bohLXPc4ZB9ZvTB5Vaa')",
+    "INSERT INTO users (username, email_address, password_hash, is_admin) VALUES \
+    ('admin_sarah',  'sarah@example.com',  '$2b$10$gFZpa4AWcybnWJ50Sy4VNebRgrrUgWhlJxbDVC3ON2ay0nYejoX06', TRUE), \
+    ('coach_jamal',    'jamal@example.com',  '$2b$10$VoB/UXpyHSSYd7KSzXnJneURDP1nTSzAs5cmiwTW2/KkUy.i96DdK', FALSE),  \
+    ('parent_priya',   'priya@example.com',  '$2b$10$OZ3s1j.sRrg8WE7.MSGuZuy3G0ZxqElqi09z/Mx1iVOJG7l8u/6VC', FALSE), \
+    ('gym_gabriel',    'gabriel@example.com','$2b$10$xqhn8CjhhAkpfLTM/YeomOM6EQx58mwVoz24vmXeVC/SpwGgz9s4q', FALSE), \
+    ('veggie_victoria','victoria@example.com','$2b$10$s5Fqtzd3GWQlDfYgLz3f1.85G6ZsKbEdj5bohLXPc4ZB9ZvTB5Vaa', FALSE)",
 
     "INSERT INTO recipes (author_id, recipe_title, summary, ingredients, instructions) VALUES \
     (1, 'Dorm Room Pasta', \
@@ -207,9 +228,9 @@ app.get("/seed", function (req, res) {
     (1, 2, 4, 'Quick and easy for busy evenings.'),\
     (2, 3, 5, 'Great meal prep option and very filling.'),\
     (5, 1, 4, 'Really cheap and easy to make.');"
+  ]
 
-  
-  ];
+
 
   steps.reduce(function (p, sql) {
     return p.then(function () {
@@ -224,7 +245,8 @@ app.get("/seed", function (req, res) {
       res.status(500).send("Error seeding data");
     });
 });
-//recipe tags filter page
+
+// recipe tags filter page
 app.get("/tags", function (req, res) {
   db.query("SELECT tag_id, tag_name FROM tags ORDER BY tag_name")
     .then(function (tags) {
@@ -250,7 +272,7 @@ app.get("/tags/:id", function (req, res) {
       if (!rows.length) {
         return res.render("tags", {
           tag_name: "Unknown tag",
-          recipes: []         
+          recipes: []
         });
       }
 
@@ -258,7 +280,7 @@ app.get("/tags/:id", function (req, res) {
 
       res.render("tags", {
         tag_name,
-        recipes: rows          
+        recipes: rows
       });
     })
     .catch(function (err) {
@@ -267,31 +289,38 @@ app.get("/tags/:id", function (req, res) {
     });
 });
 
-//user profile page
- app.get("/users", function (req, res) {
+// user profile page
+app.get("/users",requireAdmin, function (req, res) {
   db.query("SELECT user_id, username, email_address FROM users")
     .then(function (users) {
       res.render("users", { users: users });
+    });
+});
+//admin users route 
+app.get("/admin/users", requireAdmin, function (req, res) {
+  db.query("SELECT user_id, username, email_address, is_admin, created_at FROM users ORDER BY created_at DESC")
+    .then(function (users) {
+      res.render("admin_users", { users: users });
     })
- });
-
-
-
-//user Detail page 
-app.get("/users/:id", (req, res) => {
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading admin users");
+    });
+});
+// user detail page
+app.get("/users/:id",  (req, res) => {
   const userId = req.params.id;
   db.query("SELECT * FROM users WHERE user_id = ?", [userId]).then(user => {
     if (!user.length) return res.send("User not found");
 
     db.query("SELECT * FROM recipes WHERE author_id = ?", [userId]).then(recipes => {
       res.render("profile", { user: user[0], recipes });
-      console.log("profile", { user: user[0], recipes });
     });
   });
 });
 
-//recipe listings   page
-  app.get("/recipes", function (req, res) {
+// recipe listings page
+app.get("/recipes", function (req, res) {
   const sql = `
     SELECT r.recipe_id, r.recipe_title, r.summary, u.username
     FROM recipes r
@@ -305,9 +334,8 @@ app.get("/users/:id", (req, res) => {
     });
 });
 
-
-  //recipe detail page
-  app.get("/recipes/:id", function (req, res) {
+// recipe detail page
+app.get("/recipes/:id", function (req, res) {
   const id = req.params.id;
 
   db.query("SELECT * FROM recipes WHERE recipe_id = ?", [id])
@@ -316,9 +344,7 @@ app.get("/users/:id", (req, res) => {
       const recipe = rows[0];
 
       return db.query(
-        "SELECT t.tag_name FROM tags t " +
-        "JOIN recipe_tags rt ON t.tag_id = rt.tag_id " +
-        "WHERE rt.recipe_id = ?",
+        "SELECT t.tag_name FROM tags t JOIN recipe_tags rt ON t.tag_id = rt.tag_id WHERE rt.recipe_id = ?",
         [id]
       ).then(function (tags) {
         res.render("recipes", { recipe: recipe, tags: tags });
@@ -326,14 +352,10 @@ app.get("/users/:id", (req, res) => {
     });
 });
 
-//swaps form route 
-app.get("/recipes/:id/swap", function (req, res) {
+// swaps form route - protected
+app.get("/recipes/:id/swap", requireLogin, function (req, res) {
   const recipeId = req.params.id;
   const currentUserId = req.session.uid;
-
-  if (!currentUserId) {
-    return res.redirect("/signin");
-  }
 
   Promise.all([
     db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId]),
@@ -352,15 +374,12 @@ app.get("/recipes/:id/swap", function (req, res) {
       res.status(500).send("Error loading swap form");
     });
 });
-//swaps post route
-app.post("/recipes/:id/swap", function (req, res) {
+
+// swaps post route - protected
+app.post("/recipes/:id/swap", requireLogin, function (req, res) {
   const requested_recipe_id = req.params.id;
   const requester_id = req.session.uid;
   const offered_recipe_id = req.body.offered_recipe_id;
-
-  if (!requester_id) {
-    return res.redirect("/signin");
-  }
 
   db.query(
     "INSERT INTO swaps (requester_id, requested_recipe_id, offered_recipe_id, swap_status) VALUES (?, ?, ?, 'pending')",
@@ -375,8 +394,8 @@ app.post("/recipes/:id/swap", function (req, res) {
     });
 });
 
-//swaps route
-app.get("/swaps", function (req, res) {
+// swaps route
+app.get("/swaps", requireLogin,function (req, res) {
   const sql = `
     SELECT 
       s.swap_id,
@@ -386,12 +405,10 @@ app.get("/swaps", function (req, res) {
       requested.recipe_title AS requested_title,
       offered.recipe_title AS offered_title
     FROM swaps s
-    JOIN users u
-    ON s.requester_id = u.user_id
+    JOIN users u ON s.requester_id = u.user_id
     JOIN recipes requested ON s.requested_recipe_id = requested.recipe_id
     JOIN recipes offered ON s.offered_recipe_id = offered.recipe_id
     ORDER BY s.created_at DESC
-    
   `;
 
   db.query(sql)
@@ -401,20 +418,14 @@ app.get("/swaps", function (req, res) {
     .catch(function (err) {
       console.error(err);
       res.status(500).send("Error loading swaps");
-      console.log(req.body);
-
     });
 });
 
-//reviews post route
-app.post("/recipes/:id/reviews", function (req, res) {
+// reviews post route - protected
+app.post("/recipes/:id/reviews", requireLogin, function (req, res) {
   const recipeId = req.params.id;
   const userId = req.session.uid;
   const { rating, comment } = req.body;
-
-  if (!userId) {
-    return res.redirect("/signin");
-  }
 
   db.query(
     "INSERT INTO reviews (recipe_id, user_id, rating, comment) VALUES (?, ?, ?, ?)",
@@ -429,12 +440,11 @@ app.post("/recipes/:id/reviews", function (req, res) {
     });
 });
 
-//reviews form route 
-app.get("/recipes/:id/reviews", function (req, res) {
+// reviews form route
+app.get("/recipes/:id/reviews", requireLogin, function (req, res) {
   const recipeId = req.params.id;
 
   db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId])
-  
     .then(function (rows) {
       if (!rows.length) return res.send("Recipe not found");
 
@@ -442,15 +452,13 @@ app.get("/recipes/:id/reviews", function (req, res) {
         targetRecipe: rows[0]
       });
     })
-
-
     .catch(function (err) {
       console.error(err);
       res.status(500).send("Error loading review form");
     });
 });
 
-//all reviews get route 
+// all reviews get route
 app.get("/reviews", function (req, res) {
   const sql = `
     SELECT r.review_id, r.recipe_id, r.user_id AS reviewer_id, r.rating, r.comment, r.created_at, u.username 
@@ -466,29 +474,27 @@ app.get("/reviews", function (req, res) {
     .catch(function (err) {
       console.error(err);
       res.status(500).send("Error loading reviews");
-      console.log(req.body);
-
     });
 });
 
-//sign up route
+// sign up route
 app.get("/signup", function (req, res) {
   res.render("signup");
 });
 
-//sign in route
+// sign in route
 app.get("/signin", function (req, res) {
   res.render("signin");
 });
 
-//logout route
+// logout route
 app.get("/logout", function (req, res) {
   req.session.destroy(function () {
     res.redirect("/");
   });
 });
 
-//register post route 
+// register post route
 app.post("/set-password", async function (req, res) {
   const params = req.body;
   const user = new User(params.username);
@@ -498,10 +504,11 @@ app.post("/set-password", async function (req, res) {
 
     if (uId) {
       await user.setUserPassword(params.password);
-      res.send("Password set successfully");
+      return res.redirect("/signin")
+
     } else {
       await user.addUser(params.username, params.email, params.password);
-      res.send("New user created successfully");
+      return res.redirect("/signin")
     }
   } catch (err) {
     console.error("Error while setting password", err.message);
@@ -509,7 +516,7 @@ app.post("/set-password", async function (req, res) {
   }
 });
 
-//login post route 
+// login post route
 app.post("/authenticate", async function (req, res) {
   const params = req.body;
   const user = new User(params.username);
@@ -523,26 +530,29 @@ app.post("/authenticate", async function (req, res) {
 
     const match = await user.authenticate(params.password);
 
-    if (match) {
-      req.session.uid = uId;
-      req.session.loggedIn = true;
-      req.session.username = user.username;
-      return res.redirect("/profile");
-    } else {
+    if (!match) {
       return res.send("Invalid password");
     }
+
+    const rows = await db.query(
+      "SELECT user_id, username, is_admin FROM users WHERE user_id = ?",
+      [uId]
+    );
+
+    req.session.uid = uId;
+    req.session.loggedIn = true;
+    req.session.username = rows[0].username;
+    req.session.isAdmin = !!rows[0].is_admin;
+
+    return res.redirect("/profile");
   } catch (err) {
     console.error("Error while comparing password", err.message);
     res.status(500).send("Login error");
   }
 });
 
-//logged in profile
-app.get("/profile", async function (req, res) {
-  if (!req.session.loggedIn || !req.session.uid) {
-    return res.redirect("/signin");
-  }
-
+// logged in profile - protected
+app.get("/profile", requireLogin, async function (req, res) {
   try {
     const users = await db.query("SELECT * FROM users WHERE user_id = ?", [req.session.uid]);
     const recipes = await db.query("SELECT * FROM recipes WHERE author_id = ?", [req.session.uid]);
@@ -562,6 +572,6 @@ app.get("/profile", async function (req, res) {
 });
 
 // Start server on port 3000
-app.listen(3000,function(){
-    console.log(`Recipe app running at http://127.0.0.1:3000/`);
+app.listen(3000, function () {
+  console.log(`Recipe app running at http://127.0.0.1:3000/`);
 });
