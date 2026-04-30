@@ -110,11 +110,12 @@ DELETE FROM tags;
 DELETE FROM users;
 
 INSERT INTO users (username, email_address, password_hash) VALUES
-  ('student_sarah',  'sarah@example.com',   'hash1'),
-  ('coach_jamal',    'jamal@example.com',   'hash2'),
-  ('parent_priya',   'priya@example.com',   'hash3'),
-  ('gym_gabriel',    'gabriel@example.com', 'hash4'),
-  ('veggie_victoria','victoria@example.com','hash5');
+  
+  ('student_sarah',  'sarah@example.com',  '$2b$10$gFZpa4AWcybnWJ50Sy4VNebRgrrUgWhlJxbDVC3ON2ay0nYejoX06'), 
+  ('coach_jamal',    'jamal@example.com',  '$2b$10$VoB/UXpyHSSYd7KSzXnJneURDP1nTSzAs5cmiwTW2/KkUy.i96DdK'), 
+  ('parent_priya',   'priya@example.com',  '$2b$10$OZ3s1j.sRrg8WE7.MSGuZuy3G0ZxqElqi09z/Mx1iVOJG7l8u/6VC'), 
+  ('gym_gabriel',    'gabriel@example.com','$2b$10$xqhn8CjhhAkpfLTM/YeomOM6EQx58mwVoz24vmXeVC/SpwGgz9s4q'),
+  ('veggie_victoria','victoria@example.com','$2b$10$s5Fqtzd3GWQlDfYgLz3f1.85G6ZsKbEdj5bohLXPc4ZB9ZvTB5Vaa');
 
 INSERT INTO recipes (author_id, recipe_title, summary, ingredients, instructions) VALUES
   (1, 'Dorm Room Pasta',

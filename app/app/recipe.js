@@ -1,5 +1,7 @@
 // Import express.js
 const express = require("express");
+const session = require("express-session");
+const { User } = require("./models/user");
 
 // Create express app
 var app = express();
@@ -17,6 +19,13 @@ app.use(express.static("static"));
 // Get the functions in the db.js file to use
 const db = require('./services/db');
 
+app.use(session({
+  secret: "recipe-swap-secret-key",
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
+
 // Create a route for root - /
 app.get("/", function(req, res) {
     
@@ -27,6 +36,7 @@ app.get("/", function(req, res) {
 app.get("/init", function (req, res) {
   const queries = [
     "DROP TABLE IF EXISTS recipe_tags",
+    "DROP TABLE IF EXISTS reviews",
     "DROP TABLE IF EXISTS swaps",
     "DROP TABLE IF EXISTS recipes",
     "DROP TABLE IF EXISTS tags",
@@ -112,24 +122,25 @@ app.get("/init", function (req, res) {
     })
     .catch(function (err) {
       console.error(err);
-      res.status(500).send("Error initialising DB");
+      res.status(500).send("Error initialising Database");
     });
 });
 
 app.get("/seed", function (req, res) {
   const steps = [
     "DELETE FROM recipe_tags",
+    "DELETE FROM reviews",
     "DELETE FROM swaps",
     "DELETE FROM recipes",
     "DELETE FROM tags",
     "DELETE FROM users",
 
     "INSERT INTO users (username, email_address, password_hash) VALUES \
-    ('student_sarah',  'sarah@example.com',  'hash1'), \
-    ('coach_jamal',    'jamal@example.com',  'hash2'), \
-    ('parent_priya',   'priya@example.com',  'hash3'), \
-    ('gym_gabriel',    'gabriel@example.com','hash4'), \
-    ('veggie_victoria','victoria@example.com','hash5')",
+    ('student_sarah',  'sarah@example.com',  '$2b$10$gFZpa4AWcybnWJ50Sy4VNebRgrrUgWhlJxbDVC3ON2ay0nYejoX06'), \
+    ('coach_jamal',    'jamal@example.com',  '$2b$10$VoB/UXpyHSSYd7KSzXnJneURDP1nTSzAs5cmiwTW2/KkUy.i96DdK'), \
+    ('parent_priya',   'priya@example.com',  '$2b$10$OZ3s1j.sRrg8WE7.MSGuZuy3G0ZxqElqi09z/Mx1iVOJG7l8u/6VC'), \
+    ('gym_gabriel',    'gabriel@example.com','$2b$10$xqhn8CjhhAkpfLTM/YeomOM6EQx58mwVoz24vmXeVC/SpwGgz9s4q'), \
+    ('veggie_victoria','victoria@example.com','$2b$10$s5Fqtzd3GWQlDfYgLz3f1.85G6ZsKbEdj5bohLXPc4ZB9ZvTB5Vaa')",
 
     "INSERT INTO recipes (author_id, recipe_title, summary, ingredients, instructions) VALUES \
     (1, 'Dorm Room Pasta', \
@@ -311,37 +322,53 @@ app.get("/users/:id", (req, res) => {
 //swaps form route 
 app.get("/recipes/:id/swap", function (req, res) {
   const recipeId = req.params.id;
-  const currentUserId = 1;
+  const currentUserId = req.session.uid;
+
+  if (!currentUserId) {
+    return res.redirect("/signin");
+  }
 
   Promise.all([
     db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId]),
- db.query("SELECT * FROM recipes WHERE author_id != ?", [currentUserId])
-  ]).then(function ([targetRows, offeredRecipes]) {
-    if (!targetRows.length) return res.send("Recipe not found");
-    res.render("swap_form", {
-      targetRecipe: targetRows[0],
-      offeredRecipes
+    db.query("SELECT * FROM recipes WHERE author_id = ?", [currentUserId])
+  ])
+    .then(function ([targetRows, offeredRecipes]) {
+      if (!targetRows.length) return res.send("Recipe not found");
+
+      res.render("swap_form", {
+        targetRecipe: targetRows[0],
+        offeredRecipes
+      });
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading swap form");
     });
-  });
 });
 //swaps post route
 app.post("/recipes/:id/swap", function (req, res) {
   const requested_recipe_id = req.params.id;
-  const requester_id = 1; 
+  const requester_id = req.session.uid;
   const offered_recipe_id = req.body.offered_recipe_id;
+
+  if (!requester_id) {
+    return res.redirect("/signin");
+  }
 
   db.query(
     "INSERT INTO swaps (requester_id, requested_recipe_id, offered_recipe_id, swap_status) VALUES (?, ?, ?, 'pending')",
     [requester_id, requested_recipe_id, offered_recipe_id]
-  ).then(function () {
-    res.redirect("/swaps");
-  }).catch(function (err) {
-    console.error(err);
-    res.status(500).send("Error creating swap request");
-    console.log(req.body);
-  });
+  )
+    .then(function () {
+      res.redirect("/swaps");
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error creating swap request");
+    });
 });
 
+//swaps route
 app.get("/swaps", function (req, res) {
   const sql = `
     SELECT 
@@ -375,82 +402,124 @@ app.get("/swaps", function (req, res) {
 //reviews post route
 app.post("/recipes/:id/reviews", function (req, res) {
   const recipeId = req.params.id;
-  const userId = 1;
+  const userId = req.session.uid;
   const { rating, comment } = req.body;
+
+  if (!userId) {
+    return res.redirect("/signin");
+  }
 
   db.query(
     "INSERT INTO reviews (recipe_id, user_id, rating, comment) VALUES (?, ?, ?, ?)",
     [recipeId, userId, rating, comment]
-  ).then(function () {
-    res.redirect("/recipes/" + recipeId);
-  }).catch(function (err) {
-    console.error(err);
-    res.status(500).send("Error saving review");
-  });
+  )
+    .then(function () {
+      res.redirect("/recipes/" + recipeId);
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error saving review");
+    });
 });
 
 //reviews form route 
 app.get("/recipes/:id/reviews", function (req, res) {
   const recipeId = req.params.id;
-  const currentUserId = 1;
 
-  Promise.all([
-    db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId]),
- db.query("SELECT * FROM recipes WHERE author_id != ?", [currentUserId])
-  ]).then(function ([targetRows, offeredRecipes]) {
-    if (!targetRows.length) return res.send("Recipe not found");
-    res.render("review_form", {
-      targetRecipe: targetRows[0],
-      offeredRecipes
+  db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId])
+    .then(function (rows) {
+      if (!rows.length) return res.send("Recipe not found");
+
+      res.render("review_form", {
+        targetRecipe: rows[0]
+      });
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading review form");
     });
-  });
 });
 
-app.get("/matches", requireLogin, async (req, res) => {
-  const userId = req.session.user.user_id;
+//sign up route
+app.get("/signup", function (req, res) {
+  res.render("signup");
+});
+
+//sign in route
+app.get("/signin", function (req, res) {
+  res.render("signin");
+});
+
+//register post route 
+app.post("/set-password", async function (req, res) {
+  const params = req.body;
+  const user = new User(params.username);
 
   try {
-    const [matches] = await db.query(
-      `
-      SELECT 
-        r.recipe_id,
-        r.recipe_title,
-        r.summary,
-        r.ingredients,
-        r.instructions,
-        u.username AS author_name,
-        COUNT(DISTINCT shared_tags.tag_id) AS matching_tags
-      FROM recipes r
-      JOIN users u ON r.author_id = u.user_id
-      JOIN recipe_tag_links rtl ON r.recipe_id = rtl.recipe_id
-      JOIN (
-        SELECT DISTINCT rtl2.tag_id
-        FROM recipes my_recipes
-        JOIN recipe_tag_links rtl2 
-          ON my_recipes.recipe_id = rtl2.recipe_id
-        WHERE my_recipes.author_id = ?
-      ) AS shared_tags 
-        ON rtl.tag_id = shared_tags.tag_id
-      WHERE r.author_id != ?
-      GROUP BY 
-        r.recipe_id,
-        r.recipe_title,
-        r.summary,
-        r.ingredients,
-        r.instructions,
-        u.username
-      ORDER BY matching_tags DESC, r.created_at DESC
-      `,
-      [userId, userId]
-    );
+    const uId = await user.getIdFromUsername();
 
-    res.render("matches", { matches });
+    if (uId) {
+      await user.setUserPassword(params.password);
+      res.send("Password set successfully");
+    } else {
+      await user.addUser(params.username, params.email, params.password);
+      res.send("New user created successfully");
+    }
+  } catch (err) {
+    console.error("Error while setting password", err.message);
+    res.status(500).send("Error setting password");
+  }
+});
+
+//login post route 
+app.post("/authenticate", async function (req, res) {
+  const params = req.body;
+  const user = new User(params.username);
+
+  try {
+    const uId = await user.getIdFromUsername();
+
+    if (!uId) {
+      return res.send("Invalid username");
+    }
+
+    const match = await user.authenticate(params.password);
+
+    if (match) {
+      req.session.uid = uId;
+      req.session.loggedIn = true;
+      req.session.username = user.username;
+      return res.redirect("/profile");
+    } else {
+      return res.send("Invalid password");
+    }
+  } catch (err) {
+    console.error("Error while comparing password", err.message);
+    res.status(500).send("Login error");
+  }
+});
+
+//logged in profile
+app.get("/profile", async function (req, res) {
+  if (!req.session.loggedIn || !req.session.uid) {
+    return res.redirect("/signin");
+  }
+
+  try {
+    const users = await db.query("SELECT * FROM users WHERE user_id = ?", [req.session.uid]);
+    const recipes = await db.query("SELECT * FROM recipes WHERE author_id = ?", [req.session.uid]);
+
+    if (!users.length) {
+      return res.send("User not found");
+    }
+
+    res.render("profile", {
+      user: users[0],
+      recipes: recipes
+    });
   } catch (err) {
     console.error(err);
-    res.render("matches", {
-      matches: [],
-      error: "Could not load recipe matches."
-    });
+    res.status(500).send("Error loading profile");
   }
 });
 

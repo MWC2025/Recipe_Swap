@@ -1,0 +1,19 @@
+extends layout
+
+block content
+  h1 Login here
+
+  form(action="/authenticate", method="POST")
+    label(for="username") Enter your username:
+    input(type="text", name="username", required=true)
+
+    br
+    br
+
+    label(for="password") Enter your password:
+    input(type="password", name="password", required=true)
+
+    br
+    br
+
+    input(type="submit", value="Submit")
