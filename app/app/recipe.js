@@ -427,6 +427,7 @@ app.get("/recipes/:id/reviews", function (req, res) {
   const recipeId = req.params.id;
 
   db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId])
+  
     .then(function (rows) {
       if (!rows.length) return res.send("Recipe not found");
 
@@ -434,9 +435,32 @@ app.get("/recipes/:id/reviews", function (req, res) {
         targetRecipe: rows[0]
       });
     })
+
+
     .catch(function (err) {
       console.error(err);
       res.status(500).send("Error loading review form");
+    });
+});
+
+//all reviews get route 
+app.get("/reviews", function (req, res) {
+  const sql = `
+    SELECT r.review_id, r.recipe_id, r.user_id AS reviewer_id, r.rating, r.comment, r.created_at, u.username 
+    FROM reviews r 
+    JOIN users u ON r.user_id = u.user_id 
+    ORDER BY r.created_at DESC;
+  `;
+
+  db.query(sql)
+    .then(function (reviews) {
+      res.render("reviews", { reviews: reviews });
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading reviews");
+      console.log(req.body);
+
     });
 });
 

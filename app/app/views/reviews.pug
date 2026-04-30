@@ -8,16 +8,18 @@ block content
     a.active(href="/recipes") Recipes
     a(href="/tags") Categories
 
-  h1 Recipe Swaps
+  h1 Recipe Reviews
 
-  if swaps.length
-    each swap in swaps
+  if reviews.length
+    each review in reviews
       div.card
-        p Swap ID: #{swap.swap_id}
-        p Requested: #{swap.requested_title}
-        p Offered: #{swap.offered_title}
-        p Status: #{swap.swap_status}
-        p Requested by: #{swap.username}
+        p Review ID: #{review.review_id}
+        p Reviewer ID: #{review.reviewer_id}
+        p Reviewed by: #{review.username}
+        p Rating: #{review.rating}
+        p Comment: #{review.comment}
+        p Created: #{review.created_at}
+       
         hr
   else
     p No swaps yet.
