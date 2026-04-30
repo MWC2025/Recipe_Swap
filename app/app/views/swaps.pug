@@ -9,10 +9,11 @@ block content
     a(href="/reviews") Reviews
     if isAdmin
       a.primary Admin
-      a(href="/users") Users    if loggedIn
+      a(href="/users") Users  
+      a.active(href="/allswaps") All Swaps
       span.nav-spacer
       a(href="/profile") Profile
-      a.active(href="/swaps") Swaps
+      a(href="/swaps") My Swaps
       a(href="/logout") Logout
     else  
       span.nav-spacer

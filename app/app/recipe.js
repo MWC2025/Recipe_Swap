@@ -394,8 +394,8 @@ app.post("/recipes/:id/swap", requireLogin, function (req, res) {
     });
 });
 
-// swaps route
-app.get("/swaps", requireLogin,function (req, res) {
+//all swaps route
+app.get("/allswaps", requireAdmin, requireLogin,function (req, res) {
   const sql = `
     SELECT 
       s.swap_id,
@@ -421,6 +421,33 @@ app.get("/swaps", requireLogin,function (req, res) {
     });
 });
 
+//user personal swaps
+app.get("/swaps", requireLogin, function (req, res) {
+  const sql = `
+    SELECT 
+      s.swap_id,
+      s.swap_status,
+      u.user_id AS requester_id,
+      u.username,
+      requested.recipe_title AS requested_title,
+      offered.recipe_title AS offered_title
+    FROM swaps s
+    JOIN users u ON s.requester_id = u.user_id
+    JOIN recipes requested ON s.requested_recipe_id = requested.recipe_id
+    JOIN recipes offered ON s.offered_recipe_id = offered.recipe_id
+    WHERE s.requester_id = ?
+    ORDER BY s.created_at DESC
+  `;
+
+  db.query(sql, [req.session.uid])
+    .then(function (swaps) {
+      res.render("swaps", { swaps: swaps });
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading swaps");
+    });
+});
 // reviews post route - protected
 app.post("/recipes/:id/reviews", requireLogin, function (req, res) {
   const recipeId = req.params.id;
@@ -508,7 +535,7 @@ app.post("/set-password", async function (req, res) {
 
     } else {
       await user.addUser(params.username, params.email, params.password);
-      return res.redirect("/signin")
+      return res.redirect("/")
     }
   } catch (err) {
     console.error("Error while setting password", err.message);
