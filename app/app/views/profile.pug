@@ -6,14 +6,17 @@ block content
     a(href="/recipes") Recipes
     a(href="/tags") Categories
     a(href="/reviews") Reviews 
+    a(href="/forum") Forum
+    a(href="/leaderboard") Leaderboard 
     if isAdmin
       a.primary Admin
       a(href="/users") Users
       a(href="/allswaps") All Swaps
 
     if loggedIn
+      a(href="/matches") Matches
       span.nav-spacer
-      a.active(href="/profile") Profile
+      a(href="/profile") Profile
       a(href="/swaps") My Swaps
       a(href="/logout") Logout
     else  

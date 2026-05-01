@@ -1,20 +1,20 @@
 extends layout
 
-
-
 block content
   nav.pill-nav 
      a.logo(href="/") RecipeSwap
      a.active(href="/") Home
-     
      a(href="/recipes") Recipes
      a(href="/tags") Categories
      a(href="/reviews") Reviews
+     a(href="/forum") Forum
+     a(href="/leaderboard") Leaderboard 
      if isAdmin
       a.primary Admin
       a(href="/users") Users
       a(href="/allswaps") All Swaps
      if loggedIn
+      a(href="/matches") Matches
       span.nav-spacer
       span Hello #{currentUsername}
       a(href="/profile") Profile

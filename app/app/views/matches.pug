@@ -6,7 +6,9 @@ block content
     a(href="/") Home
     a(href="/recipes") Recipes
     a(href="/tags") Categories
-    a.active(href="/reviews") Reviews
+    a(href="/reviews") Reviews
+    a(href="/forum") Forum
+    a(href="/leaderboard") Leaderboard 
 
     if isAdmin
       a.primary(href="/admin") Admin
@@ -14,6 +16,7 @@ block content
       a(href="/allswaps") All Swaps
 
     if loggedIn
+      a.active(href="/matches") Matches
       span.nav-spacer
       a(href="/profile") Profile
       a(href="/swaps") My Swaps

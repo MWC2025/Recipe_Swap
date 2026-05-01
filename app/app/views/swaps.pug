@@ -7,12 +7,15 @@ block content
     a(href="/recipes") Recipes
     a(href="/tags") Categories
     a(href="/reviews") Reviews
+    a(href="/forum") Forum
+    a(href="/leaderboard") Leaderboard 
     if isAdmin
       a.primary Admin
       a(href="/users") Users  
       a.active(href="/allswaps") All Swaps
     if loggedIn
       span.nav-spacer
+      a(href="/matches") Matches
       a(href="/profile") Profile
       a(href="/swaps") My Swaps
       a(href="/logout") Logout
