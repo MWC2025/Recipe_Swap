@@ -67,7 +67,7 @@ block content
         label Comment
         textarea(name="comment", required)
 
-        button(type="submit") Add review
+        a.btn(type="submit") Add review
 
     h3 Reviews
 
@@ -81,11 +81,11 @@ block content
         if loggedIn && currentUserId === review.user_id
           a(href=`/reviews/${review.review_id}/edit`) Edit
           form(method="POST", action=`/reviews/${review.review_id}/delete`)
-            button(type="submit") Delete
+            a.btn(type="submit") Delete
 
         if isAdmin
           form(method="POST", action=`/admin/reviews/${review.review_id}/delete`)
-            button(type="submit") Remove as admin
+            a.btn(type="submit") Remove as admin
 
     a.btnflex(href=`/users/${recipe.author_id}`) View Author
     br
@@ -93,4 +93,4 @@ block content
     br
     a.btnflex(href=`/recipes/${recipe.recipe_id}/reviews`) Leave a Review
     br
-    a.btnflex(href="/recipes/" + recipe.recipe_id + "/matches") View Similar Recipes
+    a.btnflex(href="/matches") View Similar Recipes  

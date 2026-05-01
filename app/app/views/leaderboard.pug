@@ -6,15 +6,13 @@ block content
     a(href="/") Home
     a(href="/recipes") Recipes
     a(href="/tags") Categories
-    a.active(href="/reviews") Reviews
+    a(href="/reviews") Reviews
     a(href="/forum") Forum
-    a(href="/leaderboard") Leaderboard 
-
+    a.active(href="/leaderboard") Leaderboard
     if isAdmin
       a.primary(href="/admin") Admin
       a(href="/users") Users
       a(href="/allswaps") All Swaps
-
     if loggedIn
       a(href="/matches") Matches
       span.nav-spacer
@@ -33,16 +31,8 @@ block content
       th Rank
       th User
       th Points
-      th Recipes
-      th Reviews
-      th Swaps
-      th Avg Rating
     each user, i in users
       tr
         td= i + 1
         td= user.username
         td= user.points
-        td= user.recipe_count
-        td= user.review_count
-        td= user.swap_count
-        td= user.avg_rating

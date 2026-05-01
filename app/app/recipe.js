@@ -960,7 +960,6 @@ app.get("/matches", requireLogin, async function (req, res) {
   }
 });
 
-
 //learderboard route
 app.get("/leaderboard", async function (req, res) {
   try {
