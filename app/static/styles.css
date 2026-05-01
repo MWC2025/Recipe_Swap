@@ -1,3 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #f7f8fc;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --text: #101828;
+  --muted: #475467;
+  --border: #e4e7ec;
+  --primary: #7c3aed;
+  --primary-dark: #6d28d9;
+  --primary-soft: #f3e8ff;
+  --danger: #b42318;
+  --success: #027a48;
+  --shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --max-width: 1100px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', Arial, sans-serif;
+  line-height: 1.6;
+}
+
+
+form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+
+
+
+
+h1,
+h2,
+h3,
+h4,
+h5
+ {
+  margin-top: 0;
+  color: var(--text);
+  line-height: 1.2;
+  font-family: 'Manrope', Arial, sans-serif;
+}
+table {  
+   font-family: 'Manrope', Arial, sans-serif;
+   font-size: 1.9rem;
+
+
+}
+h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 1.45rem;
+  margin-bottom: 14px;
+}
+
+h3 {
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+p {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+
 header {
   display: flex;
   align-items: center;    

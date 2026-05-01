@@ -41,6 +41,6 @@ block content
         p= match.summary
         p By #{match.username}
         p Shared tags: #{match.shared_tags}
-        a(href=`/recipes/${match.recipe_id}/swap`) Request swap
+        a.btn(href=`/recipes/${match.recipe_id}/swap`) Request swap
   else
     p No matches found yet.
