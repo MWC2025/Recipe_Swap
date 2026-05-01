@@ -23,21 +23,23 @@ block content
       a.logonbtn(href="/signin") Sign in
       a.logonbtn.primary(href="/signup") Sign up
 
-  h1 Your Recipe Matches
+  h1 Leaderboard
 
-  if matches.length
-    each match in matches
-      .match-card
-        if match.image_path
-          img(src=match.image_path, alt=match.recipe_title, width="250")
-        else
-          img(src="/images/placeholder-recipe.jpg", alt="Recipe placeholder", width="250")
-
-        h3
-          a(href=`/recipes/${match.recipe_id}`)= match.recipe_title
-        p= match.summary
-        p By #{match.username}
-        p Shared tags: #{match.shared_tags}
-        a(href=`/recipes/${match.recipe_id}/swap`) Request swap
-  else
-    p No matches found yet.
+  table
+    tr
+      th Rank
+      th User
+      th Points
+      th Recipes
+      th Reviews
+      th Swaps
+      th Avg Rating
+    each user, i in users
+      tr
+        td= i + 1
+        td= user.username
+        td= user.points
+        td= user.recipe_count
+        td= user.review_count
+        td= user.swap_count
+        td= user.avg_rating

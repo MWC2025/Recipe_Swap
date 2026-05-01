@@ -1,23 +1,24 @@
 extends layout
 
 block content
-  nav.pill-nav  
+  nav.pill-nav
     a.logo(href="/") RecipeSwap
     a(href="/") Home
-    
     a.active(href="/recipes") Recipes
     a(href="/tags") Categories
     a(href="/reviews") Reviews
+
     if isAdmin
-      a.primary Admin
+      a.primary(href="/admin") Admin
       a(href="/users") Users
       a(href="/allswaps") All Swaps
+
     if loggedIn
       span.nav-spacer
       a(href="/profile") Profile
       a(href="/swaps") My Swaps
       a(href="/logout") Logout
-    else  
+    else
       span.nav-spacer
       a.logonbtn(href="/signin") Sign in
       a.logonbtn.primary(href="/signup") Sign up
@@ -41,14 +42,52 @@ block content
       h4 Tags
       p= tags.map(t => t.tag_name).join(', ')
 
+    if recipe.image_path
+      img(src=recipe.image_path, alt=recipe.recipe_title, width="300")
+    else
+      img(src="/images/placeholder-recipe.jpg", alt="Recipe placeholder", width="300")
 
-    a.btnflex(href=`/users/${recipe.author_id}`) View Author 
+    h3 Ratings
+    p Average rating: #{ratingSummary.avg_rating || "No ratings yet"} / 5
+    p Review count: #{ratingSummary.review_count}
 
-    br 
+    if loggedIn
+      form(method="POST", action=`/recipes/${recipe.recipe_id}/reviews`)
+        label Rating
+        select(name="rating", required)
+          option(value="5") 5
+          option(value="4") 4
+          option(value="3") 3
+          option(value="2") 2
+          option(value="1") 1
+
+        label Comment
+        textarea(name="comment", required)
+
+        button(type="submit") Add review
+
+    h3 Reviews
+
+    each review in reviews
+      .review-card
+        p
+          strong= review.username
+          |  - #{review.rating}/5
+        p= review.comment
+
+        if loggedIn && currentUserId === review.user_id
+          a(href=`/reviews/${review.review_id}/edit`) Edit
+          form(method="POST", action=`/reviews/${review.review_id}/delete`)
+            button(type="submit") Delete
+
+        if isAdmin
+          form(method="POST", action=`/admin/reviews/${review.review_id}/delete`)
+            button(type="submit") Remove as admin
+
+    a.btnflex(href=`/users/${recipe.author_id}`) View Author
+    br
     a.btnflex(href=`/recipes/${recipe.recipe_id}/swap`) Request Swap
     br
     a.btnflex(href=`/recipes/${recipe.recipe_id}/reviews`) Leave a Review
     br
     a.btnflex(href="/recipes/" + recipe.recipe_id + "/matches") View Similar Recipes
-
-  

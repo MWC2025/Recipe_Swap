@@ -1,0 +1,40 @@
+extends layout
+
+block content
+  nav.pill-nav
+    a.logo(href="/") RecipeSwap
+    a(href="/") Home
+    a(href="/recipes") Recipes
+    a(href="/tags") Categories
+    a.active(href="/reviews") Reviews
+
+    if isAdmin
+      a.primary(href="/admin") Admin
+      a(href="/users") Users
+      a(href="/allswaps") All Swaps
+
+    if loggedIn
+      span.nav-spacer
+      a(href="/profile") Profile
+      a(href="/swaps") My Swaps
+      a(href="/logout") Logout
+    else
+      span.nav-spacer
+      a.logonbtn(href="/signin") Sign in
+      a.logonbtn.primary(href="/signup") Sign up
+
+  h1 Edit Review
+
+  form(method="POST", action=`/reviews/${review.review_id}/edit`)
+    label(for="rating") Rating
+    select(name="rating", id="rating", required)
+      option(value="5", selected=review.rating == 5) 5
+      option(value="4", selected=review.rating == 4) 4
+      option(value="3", selected=review.rating == 3) 3
+      option(value="2", selected=review.rating == 2) 2
+      option(value="1", selected=review.rating == 1) 1
+
+    label(for="comment") Comment
+    textarea(name="comment", id="comment", required)= review.comment
+
+    button(type="submit") Save changes

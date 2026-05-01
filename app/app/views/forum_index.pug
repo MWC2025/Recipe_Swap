@@ -23,21 +23,20 @@ block content
       a.logonbtn(href="/signin") Sign in
       a.logonbtn.primary(href="/signup") Sign up
 
-  h1 Your Recipe Matches
+  h1 Forum
 
-  if matches.length
-    each match in matches
-      .match-card
-        if match.image_path
-          img(src=match.image_path, alt=match.recipe_title, width="250")
-        else
-          img(src="/images/placeholder-recipe.jpg", alt="Recipe placeholder", width="250")
+  form(method="GET", action="/forum")
+    input(type="text", name="search", value=search, placeholder="Search by ingredient or keyword")
+    button(type="submit") Search
 
-        h3
-          a(href=`/recipes/${match.recipe_id}`)= match.recipe_title
-        p= match.summary
-        p By #{match.username}
-        p Shared tags: #{match.shared_tags}
-        a(href=`/recipes/${match.recipe_id}/swap`) Request swap
-  else
-    p No matches found yet.
+  if loggedIn
+    a(href="/forum/new") New post
+
+  each post in posts
+    .post-card
+      h3
+        a(href=`/forum/${post.post_id}`)= post.title
+      p= post.content
+      p Posted by #{post.username}
+      if post.ingredient_tag
+        p Ingredient: #{post.ingredient_tag}

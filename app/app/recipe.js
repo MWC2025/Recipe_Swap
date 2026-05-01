@@ -87,6 +87,7 @@ app.get("/init", function (req, res) {
       summary TEXT NOT NULL, \
       ingredients TEXT NOT NULL, \
       instructions TEXT NOT NULL, \
+      image_path VARCHAR(255) NULL, \
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
       CONSTRAINT fk_recipes_author \
         FOREIGN KEY (author_id) REFERENCES users(user_id) \
@@ -136,14 +137,41 @@ app.get("/init", function (req, res) {
       rating INT NOT NULL, \
       comment TEXT NOT NULL, \
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+      UNIQUE KEY unique_recipe_review (recipe_id, user_id), \
       CONSTRAINT fk_reviews_recipe \
         FOREIGN KEY (recipe_id) REFERENCES recipes(recipe_id) \
         ON DELETE CASCADE, \
       CONSTRAINT fk_reviews_user \
         FOREIGN KEY (user_id) REFERENCES users(user_id) \
         ON DELETE CASCADE \
-    )"
+    ",
+    
+
+    "CREATE TABLE forum_posts ( \
+      post_id INT AUTO_INCREMENT PRIMARY KEY, \
+      user_id INT NOT NULL, \
+      title VARCHAR(150) NOT NULL, \
+      content TEXT NOT NULL, \
+      ingredient_tag VARCHAR(100) NULL, \
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE \
+     )",
+
+    "CREATE TABLE forum_comments ( \
+      comment_id INT AUTO_INCREMENT PRIMARY KEY, \
+      post_id INT NOT NULL, \
+      user_id INT NOT NULL, \
+      comment TEXT NOT NULL, \
+      upvotes INT NOT NULL DEFAULT 0, \
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+      FOREIGN KEY (post_id) REFERENCES forum_posts(post_id) ON DELETE CASCADE, \
+      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE \
+    )",
+
   ];
+
+
+
 
   Promise.all(queries.map(function (q) { return db.query(q); }))
     .then(function () {
@@ -176,27 +204,27 @@ app.get("/seed", function (req, res) {
      'Simple one-pot pasta that a beginner can cook with just a hob and one pan.', \
      'dried pasta, jarred tomato sauce, 2 cloves garlic (minced), 2 tbsp olive oil, salt, black pepper, dried mixed herbs, grated cheese (optional)', \
      '1) Bring a pot of salted water to a boil and cook the pasta according to packet instructions. 2) While the pasta cooks, heat olive oil in a pan on medium, add minced garlic and cook for 1–2 minutes until fragrant. 3) Pour in the tomato sauce, season with salt, pepper and mixed herbs, and simmer for 5 minutes. 4) Drain the pasta, reserving a splash of cooking water, then toss pasta into the sauce, loosening with the water if needed. 5) Serve hot and top with grated cheese if using.' \
-    ), \
+    ),'/images/recipe1.jpg'), \
     (2, 'Lift Day Power Bowl', \
      'High-protein chicken, rice and veg bowl designed for training days and easy meal prep.', \
      '2 chicken breasts, 1 cup uncooked rice, 2 cups broccoli florets, 1 tbsp olive oil, 1 tsp smoked paprika, 1 tsp garlic powder, salt, pepper, chilli flakes (optional)', \
      '1) Preheat the oven to 200°C and line a baking tray. 2) Season chicken breasts with olive oil, smoked paprika, garlic powder, salt and pepper, then bake for 18–22 minutes until cooked through. 3) Cook rice according to packet instructions. 4) Steam or microwave broccoli until just tender but still bright green. 5) Slice the chicken and assemble bowls with rice at the base, broccoli on one side and chicken on top, sprinkling chilli flakes if you like heat.' \
-    ), \
+    ),'/images/recipe2.jpg'), \
     (3, 'Five-Minute Breakfast Mug Omelette', \
      'Microwave omelette in a mug for busy mornings, with optional veg and cheese add-ins.', \
      '2 eggs, 2 tbsp milk, pinch salt, pinch pepper, 2 tbsp grated cheese, 2 tbsp chopped bell pepper, 1 tbsp chopped onion, 1 tsp olive oil or butter (for greasing)', \
      '1) Lightly grease a large microwave-safe mug with oil or butter. 2) Crack in the eggs, add milk, salt and pepper, then whisk with a fork until well combined. 3) Stir in chopped vegetables and grated cheese. 4) Microwave on high for 45–60 seconds, stir, then microwave in 20-second bursts until just set and fluffy. 5) Let it sit for 1 minute before eating as it will be very hot.' \
-    ), \
+    ),'/images/recipe3.jpg'), \
     (4, 'Sheet-Pan Cajun Chicken & Sweet Potato', \
      'High-protein traybake with chicken, sweet potato and peppers – perfect for Sunday meal prep.', \
      '2 chicken thighs (boneless, skinless), 1 large sweet potato (cubed), 1 red bell pepper (sliced), 1 tbsp olive oil, 2 tsp Cajun seasoning, salt, pepper', \
      '1) Preheat the oven to 200°C and line a baking tray with baking paper. 2) Toss sweet potato cubes and sliced pepper with half the olive oil, Cajun seasoning, salt and pepper, then spread on the tray. 3) Rub remaining oil and seasoning onto the chicken thighs and place them on top of the vegetables. 4) Roast for 25–30 minutes, turning the veg once halfway, until the chicken is cooked through and the sweet potatoes are soft. 5) Divide into containers for meal prep or serve immediately.' \
-    ), \
+    ), '/images/recipe4.jpg'),\
     (5, 'One-Pan Chickpea Veggie Skillet', \
      'Budget-friendly vegetarian skillet with chickpeas and mixed vegetables, great with rice or toast.', \
      '1 can chickpeas (drained and rinsed), 1 small onion (diced), 1 bell pepper (diced), 1 small courgette (sliced), 2 cloves garlic (minced), 1 tsp smoked paprika, 1 tsp ground cumin, 2 tbsp olive oil, salt, pepper, handful fresh parsley (optional), cooked rice or bread to serve', \
      '1) Heat olive oil in a large pan over medium heat, then add diced onion and cook for 3–4 minutes until softened. 2) Add garlic, bell pepper and courgette, cooking for another 4–5 minutes until the vegetables start to soften. 3) Stir in chickpeas, smoked paprika, cumin, salt and pepper, and cook for 5 minutes, stirring occasionally. 4) Taste and adjust seasoning, then sprinkle with chopped parsley if using. 5) Serve over cooked rice or with toasted bread for a complete meal.' \
-    )",
+    )", 'NULL',
 
     "INSERT INTO tags (tag_name) VALUES \
     ('vegetarian'), \
@@ -336,21 +364,44 @@ app.get("/recipes", function (req, res) {
 });
 
 // recipe detail page
-app.get("/recipes/:id", function (req, res) {
+app.get("/recipes/:id", async function (req, res) {
   const id = req.params.id;
 
-  db.query("SELECT * FROM recipes WHERE recipe_id = ?", [id])
-    .then(function (rows) {
-      if (!rows.length) return res.send("Recipe not found");
-      const recipe = rows[0];
+  try {
+    const recipeRows = await db.query("SELECT * FROM recipes WHERE recipe_id = ?", [id]);
+    if (!recipeRows.length) return res.send("Recipe not found");
 
-      return db.query(
-        "SELECT t.tag_name FROM tags t JOIN recipe_tags rt ON t.tag_id = rt.tag_id WHERE rt.recipe_id = ?",
-        [id]
-      ).then(function (tags) {
-        res.render("recipes", { recipe: recipe, tags: tags });
-      });
+    const recipe = recipeRows[0];
+
+    const tags = await db.query(
+      "SELECT t.tag_name FROM tags t JOIN recipe_tags rt ON t.tag_id = rt.tag_id WHERE rt.recipe_id = ?",
+      [id]
+    );
+
+    const ratingSummary = await db.query(
+      "SELECT ROUND(AVG(rating), 1) AS avg_rating, COUNT(*) AS review_count FROM reviews WHERE recipe_id = ?",
+      [id]
+    );
+
+    const reviews = await db.query(
+      `SELECT r.review_id, r.recipe_id, r.user_id, r.rating, r.comment, r.created_at, u.username
+       FROM reviews r
+       JOIN users u ON r.user_id = u.user_id
+       WHERE r.recipe_id = ?
+       ORDER BY r.created_at DESC`,
+      [id]
+    );
+
+    res.render("recipes", {
+      recipe,
+      tags,
+      reviews,
+      ratingSummary: ratingSummary[0]
     });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error loading recipe");
+  }
 });
 
 // swaps form route - protected
@@ -450,33 +501,159 @@ app.get("/swaps", requireLogin, function (req, res) {
     });
 });
 // reviews post route - protected
-app.post("/recipes/:id/reviews", requireLogin, function (req, res) {
+app.post("/recipes/:id/reviews", requireLogin, async function (req, res) {
   const recipeId = req.params.id;
   const userId = req.session.uid;
   const { rating, comment } = req.body;
 
-  db.query(
-    "INSERT INTO reviews (recipe_id, user_id, rating, comment) VALUES (?, ?, ?, ?)",
-    [recipeId, userId, rating, comment]
-  )
-    .then(function () {
-      res.redirect("/recipes/" + recipeId);
-    })
-
-    .then(function () {
-      return db.query("UPDATE users SET points = points + 5 WHERE user_id = ?", [userId]);
-    })
-    .then(function () {
-      res.redirect("/recipes/" + recipeId + "/reviews");
-    })
-
-    .catch(function (err) {
-      console.error(err);
-      res.status(500).send("Error saving review");
-    });
-    
+  try {
+    await db.query(
+      "INSERT INTO reviews (recipe_id, user_id, rating, comment) VALUES (?, ?, ?, ?)",
+      [recipeId, userId, rating, comment]
+    );
+    return res.redirect("/recipes/" + recipeId);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Error saving review");
+  }
 });
 
+//edit review
+app.get("/reviews/:id/edit", requireLogin, async function (req, res) {
+  const reviewId = req.params.id;
+  const rows = await db.query("SELECT * FROM reviews WHERE review_id = ?", [reviewId]);
+
+  if (!rows.length) return res.send("Review not found");
+  if (rows[0].user_id !== req.session.uid) return res.status(403).send("Not allowed");
+
+  res.render("edit_review", { review: rows[0] });
+});
+
+app.post("/reviews/:id/edit", requireLogin, async function (req, res) {
+  const reviewId = req.params.id;
+  const { rating, comment } = req.body;
+
+  const rows = await db.query("SELECT * FROM reviews WHERE review_id = ?", [reviewId]);
+  if (!rows.length) return res.send("Review not found");
+  if (rows[0].user_id !== req.session.uid) return res.status(403).send("Not allowed");
+
+  await db.query(
+    "UPDATE reviews SET rating = ?, comment = ? WHERE review_id = ?",
+    [rating, comment, reviewId]
+  );
+
+  res.redirect("/recipes/" + rows[0].recipe_id);
+});
+//review delete 
+app.post("/reviews/:id/delete", requireLogin, async function (req, res) {
+  const reviewId = req.params.id;
+  const rows = await db.query("SELECT * FROM reviews WHERE review_id = ?", [reviewId]);
+
+  if (!rows.length) return res.send("Review not found");
+  if (rows[0].user_id !== req.session.uid) return res.status(403).send("Not allowed");
+
+  await db.query("DELETE FROM reviews WHERE review_id = ?", [reviewId]);
+  res.redirect("/recipes/" + rows[0].recipe_id);
+});
+//admin review moderation
+app.post("/admin/reviews/:id/delete", requireAdmin, async function (req, res) {
+  const reviewId = req.params.id;
+  const rows = await db.query("SELECT * FROM reviews WHERE review_id = ?", [reviewId]);
+
+  if (!rows.length) return res.send("Review not found");
+
+  await db.query("DELETE FROM reviews WHERE review_id = ?", [reviewId]);
+  res.redirect("/recipes/" + rows[0].recipe_id);
+});
+//forum route 
+app.get("/forum", async function (req, res) {
+  const search = req.query.search || "";
+  let sql = `
+    SELECT fp.*, u.username
+    FROM forum_posts fp
+    JOIN users u ON fp.user_id = u.user_id
+  `;
+  let params = [];
+
+  if (search) {
+    sql += " WHERE fp.title LIKE ? OR fp.content LIKE ? OR fp.ingredient_tag LIKE ? ";
+    params = [`%${search}%`, `%${search}%`, `%${search}%`];
+  }
+
+  sql += " ORDER BY fp.created_at DESC";
+
+  const posts = await db.query(sql, params);
+  res.render("forum_index", { posts, search });
+});
+
+app.get("/forum/new", requireLogin, function (req, res) {
+  res.render("forum_new");
+});
+
+app.post("/forum", requireLogin, async function (req, res) {
+  const { title, content, ingredient_tag } = req.body;
+
+  await db.query(
+    "INSERT INTO forum_posts (user_id, title, content, ingredient_tag) VALUES (?, ?, ?, ?)",
+    [req.session.uid, title, content, ingredient_tag || null]
+  );
+
+  res.redirect("/forum");
+});
+
+app.get("/forum/:id", async function (req, res) {
+  const postId = req.params.id;
+
+  const postRows = await db.query(
+    `SELECT fp.*, u.username
+     FROM forum_posts fp
+     JOIN users u ON fp.user_id = u.user_id
+     WHERE fp.post_id = ?`,
+    [postId]
+  );
+
+  if (!postRows.length) return res.send("Post not found");
+
+  const comments = await db.query(
+    `SELECT fc.*, u.username
+     FROM forum_comments fc
+     JOIN users u ON fc.user_id = u.user_id
+     WHERE fc.post_id = ?
+     ORDER BY fc.upvotes DESC, fc.created_at ASC`,
+    [postId]
+  );
+
+  res.render("forum_show", {
+    post: postRows[0],
+    comments
+  });
+});
+
+app.post("/forum/:id/comments", requireLogin, async function (req, res) {
+  const postId = req.params.id;
+  const { comment } = req.body;
+
+  await db.query(
+    "INSERT INTO forum_comments (post_id, user_id, comment) VALUES (?, ?, ?)",
+    [postId, req.session.uid, comment]
+  );
+
+  res.redirect("/forum/" + postId);
+});
+
+//forum moderation
+app.post("/admin/forum/posts/:id/delete", requireAdmin, async function (req, res) {
+  await db.query("DELETE FROM forum_posts WHERE post_id = ?", [req.params.id]);
+  res.redirect("/forum");
+});
+
+app.post("/admin/forum/comments/:id/delete", requireAdmin, async function (req, res) {
+  const rows = await db.query("SELECT * FROM forum_comments WHERE comment_id = ?", [req.params.id]);
+  if (!rows.length) return res.send("Comment not found");
+
+  await db.query("DELETE FROM forum_comments WHERE comment_id = ?", [req.params.id]);
+  res.redirect("/forum/" + rows[0].post_id);
+});
 // reviews form route
 app.get("/recipes/:id/reviews", function (req, res) {
   const recipeId = req.params.id;
