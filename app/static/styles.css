@@ -78,10 +78,10 @@ h5
   margin-top: 0;
   color: var(--text);
   line-height: 1.2;
-  font-family: 'Manrope', Arial, sans-serif;
+  font-family: 'Manrope';
 }
 table {  
-   font-family: 'Manrope', Arial, sans-serif;
+   font-family: 'Manrope' ;
    font-size: 1.9rem;
 
 

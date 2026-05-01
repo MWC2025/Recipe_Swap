@@ -1,60 +1,81 @@
 extends layout
 
 block content
-  nav.pill-nav 
-     a.logo(href="/") RecipeSwap
-     a.active(href="/") Home
-     a(href="/recipes") Recipes
-     a(href="/tags") Categories
-     a(href="/reviews") Reviews
-     a(href="/forum") Forum
-     a(href="/leaderboard") Leaderboard 
-     if isAdmin
-      a.primary Admin
-      a(href="/users") Users
-      a(href="/allswaps") All Swaps
-     if loggedIn
+  nav.pill-nav
+    a.logo(href="/") RecipeSwap
+    a.active(href="/") Home
+    a(href="/recipes") Recipes
+    a(href="/tags") Categories
+    a(href="/reviews") Reviews
+    a(href="/forum") Forum
+    a(href="/leaderboard") Leaderboard
+    if loggedIn
       a(href="/matches") Matches
       span.nav-spacer
-      span Hello #{currentUsername}
       a(href="/profile") Profile
       a(href="/swaps") My Swaps
       a(href="/logout") Logout
-     else  
+    else
       span.nav-spacer
       a.logonbtn(href="/signin") Sign in
       a.logonbtn.primary(href="/signup") Sign up
-     
-    
 
-  section.hero
-    .hero-text
-      h1 Share and swap recipes with your community
-      p Discover new meals, trade favourites, and connect with other home cooks.
-      .hero-actions
-        a.btn(href="/recipes") Browse Recipes
-        a.btn(href="/tags") Explore Categories
+  .hero.card
+    h1 Swap recipes, discover new meals, and join the community
+    p Share your own recipes, browse recipes from others, leave ratings, find matched swaps, and take part in food discussions.
+    .actions
+      a.btn(href="/recipes") Browse recipes
+      if loggedIn
+        a.btn(href="/matches") View matches
+      else
+        a.btn(href="/signup") Join RecipeSwap
 
-  section.home-grid
-    .main-column
-      .section-card
-        h2 Featured Recipes
-       
+  .card
+    h2 What you can do
+    .card-grid
+      .card
+        h3 Explore recipes
+        p Browse recipe listings, open full recipe pages, and view ingredients, instructions, tags, and reviews.
+      .card
+        h3 Swap with others
+        p Offer one of your own recipes in exchange for another recipe and track your swap requests.
+      .card
+        h3 Find matches
+        p Get suggested recipe matches based on shared tags and similar interests.
+      .card
+        h3 Join the forum
+        p Ask questions, share ideas, and comment on recipe discussions with other users.
+      .card
+        h3 Leave reviews
+        p Rate recipes and help other users discover the best options on the platform.
+      .card
+        h3 Climb the leaderboard
+        p Earn points through participation and see the most active users in the community.
 
-      .section-card
-        h2 Browse by Category
-        .tag-list
-      
+  .card
+    h2 Quick links
+    .actions
+      a.btn(href="/recipes") All recipes
+      a.btn(href="/tags") Browse by tags
+      a.btn(href="/forum") Forum
+      a.btn(href="/leaderboard") Leaderboard
+      if loggedIn
+        a.btn(href="/profile") My profile
+        a.btn(href="/swaps") My swaps
 
-    aside.sidebar
-      .section-card
-        h2 Community Cooks
-        ul
-        
+  .card
+    h2 Why RecipeSwap
+    p RecipeSwap is built around sharing, exchange, and community. Instead of just storing recipes, the platform helps users discover new meals, connect through swaps, and interact through reviews, matches, and forum posts.
 
-      .section-card
-        h2 Recipe Swaps
-        p View active swaps and share your favourites with others.
-        a.btn(href="/swaps") View Swaps
-    
-    
+  .card
+    h2 Community features
+    .card-grid
+      .card
+        h3 Ratings and reviews
+        p See what other users think before choosing a recipe.
+      .card
+        h3 Tags and categories
+        p Filter recipes by tag to find content more quickly.
+      .card
+        h3 Forum discussions
+        p Get help, share tips, and discuss ingredients with the wider community.
