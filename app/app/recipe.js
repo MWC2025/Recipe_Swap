@@ -76,6 +76,7 @@ app.get("/init", function (req, res) {
       email_address VARCHAR(255) NOT NULL UNIQUE, \
       password_hash VARCHAR(255) NOT NULL, \
       is_admin BOOLEAN NOT NULL DEFAULT FALSE, \
+      points INT NOT NULL DEFAULT 0, \
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP \
 )",
 
@@ -314,7 +315,7 @@ app.get("/users/:id",  (req, res) => {
     if (!user.length) return res.send("User not found");
 
     db.query("SELECT * FROM recipes WHERE author_id = ?", [userId]).then(recipes => {
-      res.render("profile", { user: user[0], recipes });
+      res.render("viewProfile", { user: user[0], recipes });
     });
   });
 });
@@ -461,22 +462,43 @@ app.post("/recipes/:id/reviews", requireLogin, function (req, res) {
     .then(function () {
       res.redirect("/recipes/" + recipeId);
     })
+
+    .then(function () {
+      return db.query("UPDATE users SET points = points + 5 WHERE user_id = ?", [userId]);
+    })
+    .then(function () {
+      res.redirect("/recipes/" + recipeId + "/reviews");
+    })
+
     .catch(function (err) {
       console.error(err);
       res.status(500).send("Error saving review");
     });
+    
 });
 
 // reviews form route
-app.get("/recipes/:id/reviews", requireLogin, function (req, res) {
+app.get("/recipes/:id/reviews", function (req, res) {
   const recipeId = req.params.id;
 
-  db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId])
-    .then(function (rows) {
-      if (!rows.length) return res.send("Recipe not found");
+  Promise.all([
+    db.query("SELECT * FROM recipes WHERE recipe_id = ?", [recipeId]),
+    db.query(
+      `SELECT r.review_id, r.recipe_id, r.user_id AS reviewer_id, r.rating, r.comment, r.created_at, u.username, re.recipe_title
+       FROM reviews r
+       JOIN users u ON r.user_id = u.user_id
+       JOIN recipes re ON r.recipe_id = re.recipe_id
+       WHERE r.recipe_id = ?
+       ORDER BY r.created_at DESC`,
+      [recipeId]
+    )
+  ])
+    .then(function ([recipeRows, reviewRows]) {
+      if (!recipeRows.length) return res.send("Recipe not found");
 
       res.render("review_form", {
-        targetRecipe: rows[0]
+        targetRecipe: recipeRows[0],
+        reviews: reviewRows
       });
     })
     .catch(function (err) {
@@ -488,11 +510,12 @@ app.get("/recipes/:id/reviews", requireLogin, function (req, res) {
 // all reviews get route
 app.get("/reviews", function (req, res) {
   const sql = `
-    SELECT r.review_id, r.recipe_id, r.user_id AS reviewer_id, r.rating, r.comment, r.created_at, u.username 
-    FROM reviews r 
-    JOIN users u ON r.user_id = u.user_id 
-    ORDER BY r.created_at DESC;
-  `;
+      SELECT r.review_id, r.recipe_id, r.user_id AS reviewer_id, r.rating, r.comment, r.created_at, u.username, re.recipe_title
+       FROM reviews r
+       JOIN users u ON r.user_id = u.user_id
+       JOIN recipes re ON r.recipe_id = re.recipe_id
+       ORDER BY r.created_at DESC`
+  ;
 
   db.query(sql)
     .then(function (reviews) {
@@ -596,6 +619,43 @@ app.get("/profile", requireLogin, async function (req, res) {
     console.error(err);
     res.status(500).send("Error loading profile");
   }
+});
+
+app.get("/recipes/:id/matches", function (req, res) {
+  const recipeId = req.params.id;
+
+  const sql = `
+    SELECT DISTINCT r.recipe_id, r.recipe_title, r.summary, u.username
+    FROM recipes r
+    JOIN users u ON r.author_id = u.user_id
+    JOIN recipe_tags rt ON r.recipe_id = rt.recipe_id
+    WHERE rt.tag_id IN (
+      SELECT tag_id FROM recipe_tags WHERE recipe_id = ?
+    )
+    AND r.recipe_id != ?
+    ORDER BY r.created_at DESC
+  `;
+
+  db.query(sql, [recipeId, recipeId])
+    .then(function (matches) {
+      res.render("matches", { matches: matches });
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading matches");
+    });
+});
+
+//learderboard route
+app.get("/leaderboard", function (req, res) {
+  db.query("SELECT user_id, username, points FROM users ORDER BY points DESC, username ASC")
+    .then(function (users) {
+      res.render("leaderboard", { users: users });
+    })
+    .catch(function (err) {
+      console.error(err);
+      res.status(500).send("Error loading leaderboard");
+    });
 });
 
 // Start server on port 3000

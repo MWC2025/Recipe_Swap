@@ -11,6 +11,11 @@ block content
       a(href="/users") Users
       a(href="/allswaps") All Swaps
 
+      .profile
+        h4 Email
+        p.email= user.email_address
+        h4 Account Created
+        p.email= user.created_at
     if loggedIn
       span.nav-spacer
       a.active(href="/profile") Profile
@@ -24,10 +29,6 @@ block content
   .profile
     
     h2= user.username
-    h4 Email
-    p.email= user.email_address
-    h4 Account Created
-    p.email= user.created_at
     
 
   h3.section-title Recipes
@@ -38,3 +39,5 @@ block content
         h4= recipe.recipe_title
         p= recipe.summary
         a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
+
+  a.btn(href=`/recipes`) Back to Recipes 

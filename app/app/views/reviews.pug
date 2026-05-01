@@ -26,8 +26,8 @@ block content
   if reviews.length
     each review in reviews
       div.card
-        p Review ID: #{review.review_id}
-        p Reviewer ID: #{review.reviewer_id}
+        p Review number: #{review.review_id}
+        p Recipe name: #{review.recipe_title}
         p Reviewed by: #{review.username}
         p Rating: #{review.rating}
         p Comment: #{review.comment}
@@ -35,7 +35,7 @@ block content
        
         hr
   else
-    p No swaps yet.
+    p No reviews yet.
     
 
     

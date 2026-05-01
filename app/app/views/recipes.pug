@@ -42,8 +42,13 @@ block content
       p= tags.map(t => t.tag_name).join(', ')
 
 
-    a.btn(href=`/users/${recipe.author_id}`) View Author
-    a.btn(href=`/recipes/${recipe.recipe_id}/swap`) Request Swap
-    a.btn(href=`/recipes/${recipe.recipe_id}/reviews`) leave a Review
+    a.btnflex(href=`/users/${recipe.author_id}`) View Author 
+
+    br 
+    a.btnflex(href=`/recipes/${recipe.recipe_id}/swap`) Request Swap
+    br
+    a.btnflex(href=`/recipes/${recipe.recipe_id}/reviews`) Leave a Review
+    br
+    a.btnflex(href="/recipes/" + recipe.recipe_id + "/matches") View Similar Recipes
 
   

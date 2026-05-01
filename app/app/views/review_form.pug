@@ -24,23 +24,41 @@ block content
   h1 Leave a Review
   p Recipe: #{targetRecipe.recipe_title}
 
-  form(method="POST", action="/recipes/" + targetRecipe.recipe_id + "/reviews")
-    label(for="rating") Rating
-    select(name="rating", id="rating", required)
-      option(value="") Select a rating
-      option(value="1") 1
-      option(value="2") 2
-      option(value="3") 3
-      option(value="4") 4
-      option(value="5") 5
+  if loggedIn
+    form(method="POST", action="/recipes/" + targetRecipe.recipe_id + "/reviews")
+      label(for="rating") Rating
+      select(name="rating", id="rating", required)
+        option(value="") Select a rating
+        option(value="1") 1
+        option(value="2") 2
+        option(value="3") 3
+        option(value="4") 4
+        option(value="5") 5
 
-    br
-    br
+      br
+      br
 
-    label(for="comment") Comment
-    textarea(name="comment", id="comment", rows="5", cols="40", required)
+      label(for="comment") Comment
+      textarea(name="comment", id="comment", rows="5", cols="40", required)
 
-    br
-    br
+      br
+      br
 
-    button(type="submit") Submit Review
+      button(type="submit") Submit Review
+  else
+    p You must be signed in to leave a review.
+
+  h2 Existing Reviews
+
+  if reviews && reviews.length
+    each review in reviews
+      div.card
+        p Review ID: #{review.review_id}
+        p Recipe name: #{review.recipe_title}
+        p Rating: #{review.rating}
+        p Comment: #{review.comment}
+        p Reviewed by: #{review.username}
+        p Created: #{review.created_at}
+        hr
+  else
+    p No reviews yet.

@@ -21,16 +21,20 @@ block content
       span.nav-spacer
       a.logonbtn(href="/signin") Sign in
       a.logonbtn.primary(href="/signup") Sign up
-    
-    
-  h2.page-title Recipes tagged: #{tag_name}
 
-  if recipes && recipes.length
-    .card-grid
-      each recipe in recipes
-        .card
-          h3= recipe.recipe_title
-          p= recipe.summary
-          a.btn(href=`/recipes/${recipe.recipe_id}`) View Recipe
+  h1 Matching Recipes
+
+  p Here are recipes with similar tags or categories.
+
+  if matches && matches.length
+    each match in matches
+      div.card
+        h2= match.recipe_title
+        p
+          strong Uploaded by:
+          |  #{match.username}
+        p= match.summary
+
+        a(href="/recipes/" + match.recipe_id) View Recipe
   else
-    p No recipes found for this tag.
+    p No matching recipes found.
